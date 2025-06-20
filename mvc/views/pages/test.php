@@ -21,6 +21,6 @@
     <div class="list-test" id="list-test">
     </div>
     <div class="row my-3">
-        <?php if(isset($data["Plugin"]["pagination"])) require "./mvc/views/inc/pagination.php"?>
+        <?php if (isset($data["Plugin"]["pagination"])) require "./mvc/views/inc/pagination.php" ?>
     </div>
 </div>

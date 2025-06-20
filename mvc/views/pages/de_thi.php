@@ -1,4 +1,5 @@
 <nav class="nav border-bottom bg-white position-fixed top-0 w-100">
+
     <div class="container d-flex justify-content-between align-items-center py-2">
         <button id="btn-thoat" class="btn btn-hero btn-danger" role="button"><i class="fa fa-power-off"></i>
             Thoát</button>
@@ -13,7 +14,9 @@
         </div>
     </div>
 </nav>
-<div class="container mb-5 mt-6" id="dethicontent" data-id="<?php echo $data["Made"]?>">
+<div class="container mb-5 mt-6" id="dethicontent" data-id="<?php echo $data["Made"] ?>"
+    data-loaigiao="<?php echo $data['check']['loaigiao']; ?>"
+    data-manguongiao="<?php echo $data['check']['manguongiao']; ?>">
     <div class="row">
         <div class="col-8" id="list-question">
         </div>
@@ -23,3 +26,7 @@
         </div>
     </div>
 </div>
+
+<script>
+    const dethidata = <?php echo json_encode($data); ?>;
+</script>

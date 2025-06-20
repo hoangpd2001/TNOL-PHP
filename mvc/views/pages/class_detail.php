@@ -27,7 +27,7 @@
             <div class="block block-rounded">
                 <div class="block-header block-header-default">
                     <h3 class="block-title">
-                        <?php echo $data['Detail']['mamonhoc'] . " - " . $data['Detail']['tenmonhoc'] . " - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - " . $data['Detail']['tennhom'] ?>
+                        <?php echo  $data['Detail']['tennhom']." - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - "  ?>
                     </h3>
                     <div class="block-options">
                         <div class="block-options-item">
@@ -128,7 +128,7 @@
                             <h2 class="display-1 text-center py-6" id="show-ma-moi"></h2>
                             <div class="d-flex align-items-center justify-content-between mb-4">
                                 <p class="text-center mb-0">
-                                <?php echo $data['Detail']['mamonhoc'] . " - " . $data['Detail']['tenmonhoc'] . " - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - " . $data['Detail']['tennhom'] ?>
+                                <?php echo  $data['Detail']['tennhom'] . " - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - "?>
                             </p>
                             <div>
                                 <button type="button" class="btn btn-alt-primary btn-sm btn-copy-code" data-bs-toggle="tooltip" data-bs-placement="top" title="Sao chép mã mời"><i
@@ -170,7 +170,7 @@
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSetting" aria-labelledby="offcanvasExampleLabel">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasExampleLabel">
-            <?php echo $data['Detail']['mamonhoc'] . " - " . $data['Detail']['tenmonhoc'] . " - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - " . $data['Detail']['tennhom'] ?>
+            <?php echo $data['Detail']['tennhom']  . " - NH" . $data['Detail']['namhoc'] . " - HK" . $data['Detail']['hocky'] . " - " ?>
         </h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>

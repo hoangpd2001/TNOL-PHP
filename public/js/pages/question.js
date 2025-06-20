@@ -74,9 +74,20 @@ function showData(data) {
               <td class="d-none d-sm-table-cell fs-sm">
                   <strong>${dokho}</strong>
               </td>
+                <td class="text-center">
+                              <span class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill ${
+                                question.trangthai == 1
+                                  ? "bg-success-light text-success"
+                                  : "bg-danger-light text-danger"
+                              } bg-success-light text-success">${
+      question.trangthai == 1 ? "Public" : "Private"
+    }</span>
+                          </td> 
               <td class="text-center col-action">
                   <a data-role="cauhoi" data-action="update" class="btn btn-sm btn-alt-secondary btn-edit-question" data-bs-toggle="tooltip"
-                              aria-label="Chỉnh sửa" data-bs-original-title="Chỉnh sửa" data-id="${question["macauhoi"]}">
+                              aria-label="Chỉnh sửa" data-bs-original-title="Chỉnh sửa" data-id="${
+                                question["macauhoi"]
+                              }">
                               <i class="fa fa-fw fa-pencil" ></i>
                           </a>
                   <a data-role="cauhoi" data-action="delete" class="btn btn-sm btn-alt-secondary btn-delete-question" 
@@ -243,11 +254,11 @@ $(document).ready(function () {
   });
 
   $.get(
-    "./subject/getSubjectAssignment",
+    "./subject/getData",
     function (data) {
       let html = "<option></option>";
       data.forEach((item) => {
-        html += `<option value="${item.mamonhoc}">${item.tenmonhoc}</option>`;
+        html += `<option value="${item.mamonhoc}">${item.mamonhoc} ${item.tenmonhoc}</option>`;
       });
       $(".data-monhoc").html(html);
       $("#main-page-monhoc").html(html);
@@ -297,7 +308,6 @@ $(document).ready(function () {
     // Reset filter
     $("#main-page-dokho").val(0).trigger("change");
     mainPagePagination.option.filter = {};
-
     // Ajax call + pagination
     mainPagePagination.option.filter.mamonhoc = mamonhoc;
     mainPagePagination.getPagination(
@@ -307,6 +317,7 @@ $(document).ready(function () {
   });
 
   $("#main-page-chuong").on("change", function () {
+    console.log("Chương changed");
     const machuong = $(this).val();
     mainPagePagination.option.filter.machuong = machuong;
     mainPagePagination.getPagination(
@@ -323,12 +334,13 @@ $(document).ready(function () {
       mainPagePagination.valuePage.curPage
     );
   });
-
+let questions = null;
   $("#file-cau-hoi").change(function (e) {
     e.preventDefault();
     var file = $("#file-cau-hoi")[0].files[0];
     var formData = new FormData();
     formData.append("fileToUpload", file);
+    questions=null;
     $.ajax({
       type: "post",
       url: "./question/xulyDocx",
@@ -342,13 +354,102 @@ $(document).ready(function () {
       success: function (response) {
         console.log(response);
         questions = response;
-        loadDataQuestion(response);
+        renderPreview(response);
+       // loadDataQuestion(response);
       },
       complete: function () {
         Dashmix.layout("header_loader_off");
       },
     });
   });
+  function renderPreview() {
+    const container = document.getElementById("import-preview-container");
+    container.innerHTML = "";
+  
+    questions.forEach((q, index) => {
+      const questionContent = q.question || "<em>[Không có nội dung]</em>";
+      const level = q.level || "1"; // default = 1
+      const answerIndex = parseInt(q.answer) - 1;
+  
+      const optionsHTML = (q.option || [])
+        .map((opt, i) => {
+          const isCorrect = i === answerIndex;
+          return `
+            <div class="input-group mb-2">
+              <span class="input-group-text">${String.fromCharCode(65 + i)}</span>
+              <input type="text" class="form-control option-input"
+                     name="option-${index}-${i}" data-question-index="${index}" data-option-index="${i}"
+                     value="${opt}">
+              <div class="input-group-text">
+                <input type="radio" name="correct-${index}" value="${i}" ${isCorrect ? "checked" : ""}>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+  
+      const html = `
+        <div class="mb-4 border p-3 rounded bg-light">
+          <h6>Câu ${index + 1}:</h6>
+          <div class="mb-2">
+            <label><strong>Nội dung:</strong></label>
+            <textarea class="form-control question-input" name="question-${index}" data-index="${index}">${q.question}</textarea>
+          </div>
+          <div class="mb-2">
+            <label><strong>Đáp án:</strong></label>
+            ${optionsHTML}
+          </div>
+          <div class="mb-2">
+            <label><strong>Mức độ:</strong></label>
+            <select class="form-select level-input" name="level-${index}" data-index="${index}">
+              <option value="1" ${level == "1" ? "selected" : ""}>Cơ bản</option>
+              <option value="2" ${level == "2" ? "selected" : ""}>Trung bình</option>
+              <option value="3" ${level == "3" ? "selected" : ""}>Nâng cao</option>
+            </select>
+          </div>
+        </div>
+      `;
+      container.innerHTML += html;
+    });
+  
+    // Auto update logic
+    container.querySelectorAll(".question-input").forEach((el) => {
+      el.addEventListener("input", (e) => {
+        const idx = +e.target.dataset.index;
+        questions[idx].question = e.target.value.trim();
+      });
+    });
+  
+    container.querySelectorAll(".level-input").forEach((el) => {
+      el.addEventListener("change", (e) => {
+        const idx = +e.target.dataset.index;
+        questions[idx].level = e.target.value;
+      });
+    });
+  
+    container.querySelectorAll(".option-input").forEach((el) => {
+      el.addEventListener("input", (e) => {
+        const qIdx = +e.target.dataset.questionIndex;
+        const oIdx = +e.target.dataset.optionIndex;
+        questions[qIdx].option[oIdx] = e.target.value.trim();
+      });
+    });
+  
+    container.querySelectorAll("input[type=radio]").forEach((el) => {
+      el.addEventListener("change", (e) => {
+        const name = e.target.name; // ex: correct-0
+        const qIdx = +name.split("-")[1];
+        questions[qIdx].answer = parseInt(e.target.value) + 1; // still 1-based
+      });
+    });
+  
+  
+    // Show modal
+    const modal = new bootstrap.Modal(
+      document.getElementById("modal-preview-import")
+    );
+    modal.show();
+  }
 
   $("#btnAddExcel").click(function (e) {
     e.preventDefault();
@@ -495,7 +596,7 @@ $(document).ready(function () {
     $("#content-file").html("");
   });
 
-  $("#nhap-file").click(function () {
+  $("#confirm-import").click(function () {
     $.ajax({
       type: "post",
       url: "./question/addQuesFile",
@@ -506,7 +607,9 @@ $(document).ready(function () {
       },
       success: function (response) {
         $("#modal-add-question").modal("hide");
-        // loadQuestion();
+        $("#modal-preview-import").modal("hide");
+        //loadQuestion();
+        renderPreview(response);
         mainPagePagination.getPagination(
           mainPagePagination.option,
           mainPagePagination.valuePage.curPage
@@ -538,6 +641,15 @@ $(document).ready(function () {
     let noidung = CKEDITOR.instances["js-ckeditor"].getData();
     let cautraloi = options;
     let id = $("#question_id").val();
+    let data2 ={
+      id: id,
+      mamon: mamonhoc,
+      machuong: machuong,
+      dokho: dokho,
+      noidung: noidung,
+      cautraloi: options,
+    }
+    console.log("data",data2);
     if (
       mamonhoc != "" &&
       machuong != "" &&
@@ -629,6 +741,7 @@ $(document).ready(function () {
       },
       dataType: "json",
       success: function (response) {
+        console.log(response);
         let data = response;
         let monhoc = data["mamonhoc"];
         let machuong = data["machuong"];
@@ -639,7 +752,7 @@ $(document).ready(function () {
         $("#dokho").val(dokho).trigger("change");
         setTimeout(function () {
           $("#chuong").val(machuong).trigger("change");
-        }, 100);
+        }, 200);
       },
     });
 

@@ -74,6 +74,7 @@ $(document).ready(function () {
   let mode = 1;
 
   function loadDataGroup(hienthi) {
+    console.log("load")
     $.ajax({
       type: "post",
       url: "./classmodule/loadData",
@@ -82,6 +83,7 @@ $(document).ready(function () {
       },
       dataType: "json",
       success: function (response) {
+        console.log(response)
         showGroup(response);
         groups = response;
       },
@@ -138,6 +140,10 @@ $(document).ready(function () {
                       <i class="si si-settings"></i>
                     </button>
                     <div class="dropdown-menu fs-sm">
+                     <a class="nav-main-link dropdown-item manhom" href="classmodule/detail/${group.mahocphan}">
+                                        <i class="nav-main-link-icon si si-info me-2 text-dark"></i>
+                                        <span class="nav-main-link-name fw-normal">Danh sách sinh viên</span>
+                                    </a>
                       <a class="nav-main-link dropdown-item manhom classroom-info"  data-id="${group.malop}"  data-bs-toggle="modal" data-bs-target="#modal-student">
                         <i class="nav-main-link-icon si si-info me-2 text-dark"></i>
                         <span class="nav-main-link-name fw-normal">Danh sách sinh viên</span>
@@ -205,8 +211,9 @@ $(document).ready(function () {
   );
 
   $.get(
-    "./subject/getSubjectAssignment",
+    "./subject/getData",
     function (data) {
+      console.log(data)
       let html = "<option></option>";
       data.forEach((item) => {
         html += `<option value="${item.mamonhoc}">${
@@ -217,7 +224,20 @@ $(document).ready(function () {
     },
     "json"
   );
-
+  $.get(
+    "./teacher/getData",
+    function (data) {
+      console.log(data);
+      let html = "<option></option>";
+      data.forEach((item) => {
+        html += `<option value="${item.id}">${
+          item.id + " - " + item.hoten
+        }</option>`;
+      });
+      $("#ten-giaovien").html(html);
+    },
+    "json"
+  );
   $("#ten-khoa").on("change", function () {
     console.log("change");
     let makhoa = $(this).val();
@@ -239,23 +259,7 @@ $(document).ready(function () {
         $(`#ten-nganh`).html(html);
       },
     });
-    let html2 = "<option></option>";
-    $.ajax({
-      type: "post",
-      url: "./teacher/getAllFaculty",
-      data: {
-        makhoa: makhoa,
-      },
-      dataType: "json",
-      success: function (data) {
-        console.log(data);
-        console.log("teacher");
-        data.forEach((item) => {
-          html2 += `<option value="${item.id}">${item.id} - ${item.hoten}</option>`;
-        });
-        $(`#ten-giaovien`).html(html2);
-      },
-    });
+
   });
   function renderListYear() {
     let html = "<option></option>";

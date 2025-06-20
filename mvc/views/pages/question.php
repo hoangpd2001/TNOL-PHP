@@ -52,6 +52,7 @@
                             <th style="width: 700px;">Nội dung câu hỏi</th>
                             <th class="d-none d-sm-table-cell">Môn học</th>
                             <th class="d-none d-xl-table-cell">Độ khó</th>
+                            <th class="d-none d-xl-table-cell">Trạng thái</th>
                             <th class="text-center col-header-action">Hành động</th>
                         </tr>
                     </thead>
@@ -59,7 +60,7 @@
                     </tbody>
                 </table>
             </div>
-            <?php if(isset($data["Plugin"]["pagination"])) require "./mvc/views/inc/pagination.php"?>
+            <?php if (isset($data["Plugin"]["pagination"])) require "./mvc/views/inc/pagination.php" ?>
         </div>
     </div>
 </div>
@@ -96,8 +97,7 @@
                                     <div class="col-4">
                                         <label for="" class="form-label">Môn học</label>
                                         <select class="js-select2 form-select data-monhoc" data-tab="1" id="mon-hoc"
-                                            name="mon-hoc" style="width: 100%;" data-placeholder="Choose one.."
-                                            >
+                                            name="mon-hoc" style="width: 100%;" data-placeholder="Choose one..">
                                         </select>
                                     </div>
                                     <div class="col-4">
@@ -200,6 +200,27 @@
                         <div id="content-file"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div><!-- Modal xem danh sách câu hỏi sau khi import -->
+<div class="modal fade" id="modal-preview-import" tabindex="-1" role="dialog" aria-labelledby="modal-preview-import"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xem trước danh sách câu hỏi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="import-preview-container">
+                    <!-- Câu hỏi sẽ được render vào đây -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-import" type="button" class="btn btn-primary">
+                    <i class="fa fa-check me-1"></i> Xác nhận lưu vào hệ thống
+                </button>
             </div>
         </div>
     </div>

@@ -1,13 +1,15 @@
 <?php
 require_once 'vendor/autoload.php';
 require_once 'vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
+
 class Module extends Controller
 {
     public $nhomModel;
-
+    public $nguoiDungModel;
     function __construct()
     {
         $this->nhomModel = $this->model("NhomModel");
+        $this->nguoiDungModel= $this->model("NguoiDungModel");
         parent::__construct();
         require_once "./mvc/core/Pagination.php";
     }
@@ -33,7 +35,8 @@ class Module extends Controller
     public function detail($manhom)
     {
         $chitietnhom = $this->nhomModel->getDetailGroup($manhom);
-        if (AuthCore::checkPermission("hocphan", "view") && $_SESSION['user_id'] == $chitietnhom['giangvien']) {
+        $check = $this->nguoiDungModel->checkAdmin($_SESSION['user_id']);
+        if (AuthCore::checkPermission("hocphan", "view") && ($_SESSION['user_id'] == $chitietnhom['giangvien']||$check)) {
             $this->view("main_layout", [
                 "Page" => "class_detail",
                 "Title" => "Quản lý nhóm",
@@ -69,11 +72,11 @@ class Module extends Controller
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
             $tennhom = $_POST['tennhom'];
             $ghichu = $_POST['ghichu'];
-            $monhoc = $_POST['monhoc'];
+   
             $namhoc = $_POST['namhoc'];
             $hocky = $_POST['hocky'];
             $giangvien = $_SESSION['user_id'];
-            $result = $this->nhomModel->create($tennhom, $ghichu, $namhoc, $hocky, $giangvien, $monhoc);
+            $result = $this->nhomModel->create($tennhom, $ghichu, $namhoc, $hocky, $giangvien);
             echo $result;
         } else
             echo json_encode(false);
@@ -95,10 +98,10 @@ class Module extends Controller
             $manhom = $_POST['manhom'];
             $tennhom = $_POST['tennhom'];
             $ghichu = $_POST['ghichu'];
-            $monhoc = $_POST['monhoc'];
+         
             $namhoc = $_POST['namhoc'];
             $hocky = $_POST['hocky'];
-            $result = $this->nhomModel->update($manhom, $tennhom, $ghichu, $namhoc, $hocky, $monhoc);
+            $result = $this->nhomModel->update($manhom, $tennhom, $ghichu, $namhoc, $hocky);
             echo json_encode($result);
         } else
             echo json_encode(false);

@@ -44,12 +44,7 @@
                         <label for="" class="form-label">Ghi chú</label>
                         <input type="text" class="form-control" name="ghi-chu" id="ghi-chu" placeholder="Nhập ghi chú">
                     </div>
-                    <div class="mb-3">
-                        <label for="" class="form-label">Môn học</label>
-                        <select class="js-select2 form-select" id="mon-hoc" name="mon-hoc" style="width: 100%;"
-                            data-placeholder="Chọn môn học">
-                        </select>
-                    </div>
+                
                     <div class="mb-3 row">
                         <div class="col-6">
                             <label for="" class="form-label">Năm học</label>

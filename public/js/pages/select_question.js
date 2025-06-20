@@ -27,6 +27,7 @@ function getAnswerListForQuestion(questions) {
         },
         dataType: "json",
         success: function (answers) {
+            console.log("anser:",answers)
             // Gắn các câu trả lời vào tương ứng macauhoi
             currentQuestionLists = questions.map((question) => {
                 const { macauhoi } = question;
@@ -263,6 +264,7 @@ $.when(getQuestionOfTest() ,getInfoTest()).done(function(){
     });
 
     function loadDataChapter(mamon) {
+        console.log("load chapter", mamon)
         return $.ajax({
             type: "post",
             url: "./subject/getAllChapter",
@@ -271,6 +273,7 @@ $.when(getQuestionOfTest() ,getInfoTest()).done(function(){
             },
             dataType: "json",
             success: function (response) {
+                console.log(response);
                 showChapter(response);
             }
         });

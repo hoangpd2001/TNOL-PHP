@@ -33,26 +33,24 @@ class Classroom  extends Controller
 
     public function add()
     {
-        $malop = $_POST['malop'];
+        
         $tenlop = $_POST['tenlop'];
         $manganh = $_POST['manganh'];
         $makhoahoc = $_POST['makhoahoc'];
         $magiaovien = $_POST['magiaovien'];
-        $trangthai = $_POST['trangthai'];
-        $result = $this->lopModel->create($malop, $tenlop, $manganh, $makhoahoc, $magiaovien, $trangthai);
+        $result = $this->lopModel->create($tenlop, $manganh, $makhoahoc, $magiaovien);
         echo $result;
     }
 
     public function update()
     {
-        $id = $_POST['id'];
         $malop = $_POST['malop'];
         $tenlop = $_POST['tenlop'];
         $manganh = $_POST['manganh'];
         $makhoahoc = $_POST['makhoahoc'];
         $magiaovien = $_POST['magiaovien'];
         $trangthai = $_POST['trangthai'];
-        $result = $this->lopModel->update($id, $malop, $tenlop, $manganh, $makhoahoc, $magiaovien, $trangthai);
+        $result = $this->lopModel->update( $malop, $tenlop, $manganh, $makhoahoc, $magiaovien, $trangthai);
         echo $result;
     }
 
@@ -76,6 +74,14 @@ class Classroom  extends Controller
     {
         $data = $this->lopModel->getAll();
         echo json_encode($data);
+    }
+    public function getByMajorCount()
+    {
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            $data = $this->lopModel->getByMajorCount($_POST['manganh'], $_POST['makhoahoc']);
+            echo json_encode($data);
+        }
+        echo false;
     }
 
     public function search()

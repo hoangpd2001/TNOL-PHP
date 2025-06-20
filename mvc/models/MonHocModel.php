@@ -58,10 +58,17 @@ class MonHocModel extends DB
     }
     public function getAllByFaculty($makhoa)
     {
-        $sql = "SELECT * FROM `monhoc` WHERE `makhoa` = $makhoa";
+        $makhoa = mysqli_real_escape_string($this->con, $makhoa);
+        $sql = "SELECT * FROM `monhoc` WHERE `makhoa` = '$makhoa'";
         $result = mysqli_query($this->con, $sql);
-        return mysqli_fetch_assoc($result);
+
+        $rows = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows; 
     }
+
     public function getAllSubjectAssignment($userid)
     {
         $sql = "SELECT monhoc.* FROM phancong, monhoc WHERE manguoidung = '$userid' AND monhoc.mamonhoc = phancong.mamonhoc AND monhoc.trangthai = 1";
@@ -105,12 +112,9 @@ class MonHocModel extends DB
 
     public function checkSubject($mamon)
     {
-        $sql = "SELECT * FROM `monhoc` WHERE `mamonhoc` = $mamon";
+        $mamon = mysqli_real_escape_string($this->con, $mamon);
+        $sql = "SELECT 1 FROM `monhoc` WHERE `mamonhoc` = '$mamon' LIMIT 1";
         $result = mysqli_query($this->con, $sql);
-        $rows = array();
-        while ($row = mysqli_fetch_assoc($result)) {
-            $rows[] = $row;
-        }
-        return $rows;
+        return mysqli_num_rows($result) > 0;
     }
 }

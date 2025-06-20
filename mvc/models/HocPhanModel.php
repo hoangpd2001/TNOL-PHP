@@ -1,7 +1,11 @@
 <?php
-include "./mvc/models/LopModel.php";
+require_once "./mvc/models/LopModel.php";
+
+
 class HocPhanModel extends DB
 {
+
+   
     public function create($manganh, $makhoahoc, $monhoc, $magiaovien, $ghichu)
     {
         $lopModel = new LopModel();
@@ -59,16 +63,21 @@ class HocPhanModel extends DB
     }
 
     //    Lấy tất cả nhóm của người tạo và gom lại theo mã môn học, năm học, học kỳ
-    public function getBySubject($manganh = null, $makhoahoc = null)
+    public function getBySubject($trangthai, $userid )
     {
+        
         $filter = "";
-        if ($manganh) {
-            $filter .= " AND n.manganh = '$manganh'";
+        if ($trangthai) {
+            $filter .= " AND hp.trangthai = '$trangthai'";
         }
-        if ($makhoahoc) {
-            $filter .= " AND kh.makhoahoc = '$makhoahoc'";
+        if (!class_exists('NguoiDungModel')) {
+            require_once './mvc/models/NguoiDungModel.php';
         }
-
+        $nguoidungModel = new NguoiDungModel() ;
+        if (!$nguoidungModel->checkAdmin($userid)) {
+            $filter .= " AND hp.magiaovien = '$userid'";
+        }
+        
         $sql = "SELECT 
                 hp.mahocphan, 
                 mh.mamonhoc, mh.tenmonhoc,
@@ -85,7 +94,7 @@ class HocPhanModel extends DB
             JOIN khoahoc kh ON l.makhoahoc = kh.makhoahoc
             JOIN nguoidung gv ON hp.magiaovien = gv.id
             LEFT JOIN sinhvien sv ON sv.malop = l.malop
-            WHERE hp.trangthai = 1 
+            WHERE hp.trangthai = 1 ".  $filter."
             GROUP BY 
                 hp.mahocphan, 
                 mh.mamonhoc, mh.tenmonhoc,
@@ -141,12 +150,17 @@ class HocPhanModel extends DB
 
 
     // Lấy các nhóm mà sinh viên tham gia
-    public function getAllGroup_User($user_id, $hienthi)
+    public function getAllModule_User($user_id, $hienthi)
     {
-        $sql = "SELECT monhoc.mamonhoc,monhoc.tenmonhoc,hocphan.mahocphan, hocphan.tenhocphan, namhoc, hocky ,nguoidung.hoten, nguoidung.avatar,chitiethocphan.hienthi
-        FROM chitiethocphan, hocphan, nguoidung, monhoc
-        WHERE chitiethocphan.mahocphan = hocphan.mahocphan AND nguoidung.id = hocphan.giangvien AND monhoc.mamonhoc = hocphan.mamonhoc AND chitiethocphan.manguoidung = $user_id
-        AND chitiethocphan.hienthi = $hienthi AND hocphan.trangthai != 0";
+        $sql = "SELECT monhoc.mamonhoc,monhoc.tenmonhoc,hocphan.mahocphan, tenlop, tenkhoahoc, 
+         gv.hoten,
+         gv.avatar
+        FROM  hocphan, nguoidung gv , monhoc, lop, sinhvien sv, khoahoc
+        WHERE  gv.id = hocphan.magiaovien 
+        AND lop.makhoahoc = khoahoc.makhoahoc
+        AND monhoc.mamonhoc = hocphan.mamonhoc AND hocphan.malop = lop.malop
+        AND lop.malop = sv.malop
+        AND hocphan.trangthai = $hienthi AND sv.id = '$user_id'";
         $result = mysqli_query($this->con, $sql);
         $rows = array();
         while ($row = mysqli_fetch_assoc($result)) {
@@ -154,18 +168,16 @@ class HocPhanModel extends DB
         }
         return $rows;
     }
-
-    // Lấy chi tiết một nhóm mà sinh viên tham gia
-    // public function getDetailGroup($mahocphan)
-    // {
-    //     $sql = "SELECT monhoc.mamonhoc,monhoc.tenmonhoc,hocphan.mahocphan, hocphan.tenhocphan, namhoc, hocky, hocphan.giangvien, nguoidung.hoten, nguoidung.avatar
-    //     FROM hocphan, nguoidung, monhoc
-    //     WHERE nguoidung.id = hocphan.giangvien AND monhoc.mamonhoc = hocphan.mamonhoc AND hocphan.mahocphan = $mahocphan";
-    //     $result = mysqli_query($this->con, $sql);
-    //     return mysqli_fetch_assoc($result);
-    // }
-
-    // Lấy danh sách bạn học chung nhóm
+    public function getDetailGroup($mahocphan)
+    {
+        $sql = "SELECT hocphan.mahocphan, hocphan.magiaovien, nguoidung.hoten,
+         nguoidung.avatar, tenmonhoc, hocphan.mamonhoc,tenkhoahoc, tennganh,tenlop
+        FROM hocphan, nguoidung, monhoc, lop, khoahoc,nganh
+        WHERE nguoidung.id = hocphan.magiaovien and hocphan.malop = lop.malop and lop.makhoahoc = khoahoc.makhoahoc and lop.manganh = nganh.manganh 
+        and monhoc.mamonhoc = hocphan.mamonhoc AND hocphan.mahocphan = $mahocphan";
+        $result = mysqli_query($this->con, $sql);
+        return mysqli_fetch_assoc($result);
+    }
 
 
     // hàm update sỉ số sinh viên trong nhóm
@@ -201,9 +213,11 @@ class HocPhanModel extends DB
 
     public function getQuerySortByName($filter, $input, $args, $order)
     {
-        $query = "SELECT ND.id, avatar, hoten, email, gioitinh, ngaysinh, SUBSTRING_INDEX(hoten, ' ', -1) AS firstname FROM chitietnhom CTN, nguoidung ND WHERE CTN.manguoidung = ND.id AND CTN.manhom = " . $args['manhom'];
+        $query = "SELECT ND.id, avatar, hoten, email, gioitinh, ngaysinh, SUBSTRING_INDEX(hoten, ' ', -1) AS firstname 
+        FROM hocphan HP, lop L,sinhvien SV, nguoidung ND 
+        WHERE HP.malop = L.malop and L.malop = SV.malop and SV.id = ND.id  AND HP.mahocphan = " . $args['mahocphan'];
         if ($input) {
-            $query .= " AND (ND.hoten LIKE N'%${input}%' OR CTN.manguoidung LIKE N'%${input}%')";
+            $query .= " AND (ND.hoten LIKE N'%${input}%' OR ND.id LIKE N'%${input}%')";
         }
         $query .= " ORDER BY firstname $order";
         return $query;
@@ -211,9 +225,11 @@ class HocPhanModel extends DB
 
     public function getQuery($filter, $input, $args)
     {
-        $query = "SELECT ND.id, avatar, hoten, email, gioitinh, ngaysinh FROM chitietnhom CTN, nguoidung ND WHERE CTN.manguoidung = ND.id AND CTN.manhom = " . $args['manhom'];
+        $query = "SELECT ND.id, avatar, hoten, email, gioitinh, ngaysinh FROM hocphan HP,lop L, nguoidung ND,sinhvien SV 
+        WHERE HP.malop = L.malop and L.malop = SV.malop and SV.id = ND.id 
+        AND HP.mahocphan = " . $args['mahocphan'];
         if ($input) {
-            $query .= " AND (ND.hoten LIKE N'%${input}%' OR CTN.manguoidung LIKE N'%${input}%')";
+            $query .= " AND (ND.hoten LIKE N'%${input}%' OR ND.id LIKE N'%${input}%')";
         }
         if (isset($filter)) {
             if (isset($filter['manhomquyen'])) {

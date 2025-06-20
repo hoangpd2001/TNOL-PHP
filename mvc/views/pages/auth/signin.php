@@ -4,7 +4,7 @@
             <div class="p-3 w-100">
                 <div class="mb-3 text-center">
                     <a class="link-fx fw-bold fs-1" href="/">
-                        <span class="text-dark">SGU </span><span class="text-primary">Test</span>
+                        <span class="text-dark">TNOL </span><span class="text-primary">Hactech</span>
                     </a>
                     <p class="text-uppercase fw-bold fs-sm text-muted">Đăng nhập</p>
                 </div>
@@ -46,7 +46,7 @@
         <div class="hero-static col-md-6 d-none d-md-flex align-items-md-center justify-content-md-center text-md-center">
             <div class="p-3">
                 <p class="display-4 fw-bold text-white mb-3">
-                    Welcome to the SGU Test
+                    Welcome to the TNOL Hactech
                 </p>
                 <p class="fs-lg fw-semibold text-white-75 mb-0">
                     Copyright &copy; <span data-toggle="year-copy"></span>

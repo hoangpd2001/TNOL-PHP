@@ -27,17 +27,25 @@ $(document).ready(function () {
     });
 
     function loadDataGroups(hienthi) {
+        console.log("duoc goi")
         $.ajax({
-            type: "post",
-            url: "./client/loadDataGroups",
-            data: {
-                hienthi: hienthi
-            },
-            dataType: "json",
-            success: function (data) {
-                groups = data;
-                showListGroup(data)
-            }
+          type: "post",
+          url: "./client/loadDataGroups",
+          data: {
+            hienthi: hienthi,
+          },
+          dataType: "json",
+          success: function (data) {
+            console.log("ok");
+            console.log(data);
+            groups = data;
+            showListGroup(data);
+          },
+          error: function (xhr, status, error) {
+            console.error("❌ AJAX error:", status);
+            console.error("❌ Response text:", xhr.responseText);
+            console.error("❌ Error thrown:", error);
+          },
         });
     }
 
@@ -76,7 +84,7 @@ $(document).ready(function () {
                         </div>
                         <div class="block-content bg-body-light text-center">
                             <h3 class="fs-4 mb-3">
-                                <a href="javascript:void(0)" class="link-fx">${group.tenmonhoc}</a>
+                                <a href="javascript:void(0)" class="link-fx">${group.tennhom}</a>
                             </h3>
                             <h5 class="text-muted mb-3" style="font-size:13px">NĂM HỌC ${group.namhoc} - HỌC KỲ ${group.hocky}</h5>
                             <div class="push">
@@ -103,58 +111,128 @@ $(document).ready(function () {
     $(document).on('click', ".btn-view-group", function () {
         let manhom = $(this).data("id");
         let index = $(this).data("index");
-        $(".offcanvas-title").text(`${groups[index].tenmonhoc} - NH${groups[index].namhoc} - HK${groups[index].hocky} - ${groups[index].tennhom}`)
+        $(".offcanvas-title").text(`${groups[index].tennhom} - NH${groups[index].namhoc} - HK${groups[index].hocky} - ${groups[index].hoten}`)
         loadDataTest(manhom);
         loadDataFriend(manhom);
         loadDataAnnounce(manhom);
     });
 
     function showListTest(tests) {
-        let html = ``;
-        if(tests.length != 0) {
-            const format = new Intl.DateTimeFormat(navigator.language, {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-            });
-            tests.forEach(test => {
-                const open = new Date(test.thoigianbatdau);
-                const close = new Date(test.thoigianketthuc);
-                let color = "";
-                if (test.diemthi) {
-                    color = "primary";
-                } else {
-                    const now = Date.now();
-                    if (now < +open) {
-                        color = "secondary";
-                    } else if (now >= +open && now <= +close) {
-                        color = "success";
-                    } else {
-                        color = "danger";
-                    }
-                }
-                html += `<div class="block block-rounded block-fx-pop mb-2">
-                    <div class="block-content block-content-full border-start border-3 border-${color}">
-                        <div class="d-md-flex justify-content-md-between align-items-md-center">
-                            <div class="p-1 p-md-2">
-                                <h3 class="h4 fw-bold mb-3">
-                                    <a href="./test/start/${test.made}" class="text-dark link-fx">${test.tende}</a>
-                                </h3>
-                                <p class="fs-sm text-muted mb-0">
-                                    <i class="fa fa-clock me-1"></i> Diễn ra từ <span>${format.format(open)}</span> đến <span>${format.format(close)}</span>
-                                </p>
-                            </div>
-                        </div>
+      let html = ``;
+
+      if (tests.length !== 0) {
+        const format = new Intl.DateTimeFormat(navigator.language, {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        tests.forEach((test) => {
+          const open = new Date(test.thoigianbatdau);
+          let close =
+            test.trangthai == 1
+              ? new Date(open.getTime() + parseInt(test.thoigianthi) * 60000)
+              : test.thoigianketthuc === "0000-00-00 00:00:00"
+              ? null
+              : new Date(test.thoigianketthuc);
+
+          const now = new Date();
+          const hinhthuc = test.trangthai == 1 ? "📝 Đề thi" : "📘 Đề ôn luyện";
+
+          // Convert thoigianvaothi / lambai nếu có
+          const hasEntered = !!test.thoigianvaothi;
+          const hasFinished = !!test.thoigianlambai;
+
+          let status = "";
+          let color = "secondary";
+
+          if (hasFinished) {
+            color = "primary";
+            status = `<span class="text-${color} fw-semibold">✅ Đã thi</span>`;
+            if (parseInt(test.xemdiemthi) === 1 && test.diemthi !== null) {
+              status += ` - <span>${parseFloat(test.diemthi).toFixed(
+                2
+              )} điểm</span>`;
+            }
+          } else if (hasEntered && now <= close) {
+            color = "warning";
+            status = `<span class="text-${color} fw-semibold">🟡 Đang làm bài</span>`;
+          } else if (!hasEntered && now >= open && now <= close) {
+            color = "success";
+            status = `<span class="text-${color} fw-semibold">🟢 Đang diễn ra</span>`;
+          } else if (now < open) {
+            color = "secondary";
+            status = `<span class="text-${color} fw-semibold">🕒 Chưa bắt đầu</span>`;
+          } else if (!hasEntered && now > close) {
+            color = "danger";
+            status = `<span class="text-${color} fw-semibold">🔴 Đã hết hạn</span>`;
+          }
+
+          html += `
+              <div class="block block-rounded block-fx-pop mb-2">
+                <div class="block-content block-content-full border-start border-3 border-${color}">
+                  <div class="d-md-flex justify-content-md-between align-items-md-center">
+                    <div class="p-1 p-md-2">
+                      <h3 class="h4 fw-bold mb-2">
+                        <a href="./test/start/${test.made}?loainhom=nhom&manhom=${
+            test.manhom
+          }" class="text-dark link-fx">
+                          ${test.tende}
+                        </a>
+                      </h3>
+                      <p class="mb-1 text-muted">${hinhthuc}</p>
+                   <p class="mb-1">
+                        <i class="fa fa-clock me-1"></i> 
+                        
+                        ${
+                          parseInt(test.trangthai) !== 1
+                            ? `Từ <strong>${format.format(
+                                open
+                              )}</strong> đến <strong>${
+                                close ? format.format(close) : "Không xác định"
+                              }</strong>`
+                            : ""
+                        }
+                        ${
+                          parseInt(test.trangthai) === 1
+                            ? `Bắt đầu <strong>${format.format(
+                                open
+                              )}</strong> | Thời gian: <strong>${
+                                test.thoigianthi
+                              } phút</strong>`
+                            : ""
+                        }
+                        </p>
+
+
+                            <p class="mb-0">
+                            Trạng thái: ${status} 
+                            ${
+                              status.includes("Đã thi")
+                                ? test.diemthi == null ||
+                                  parseInt(test.xemdiemthi) === 0
+                                  ? " - Điểm: Không công bố"
+                                  : ` - Điểm: ${parseFloat(
+                                      test.diemthi
+                                    ).toFixed(2)}`
+                                : ""
+                            }
+                            </p>
                     </div>
-                </div>`;
-            });
-        } else {
-            html += `<p class="text-center">Chưa có đề thi...</p>`
-        }
-        $(".list-test").html(html);
+                  </div>
+                </div>
+              </div>`;
+        });
+      } else {
+        html += `<p class="text-center">Chưa có đề thi...</p>`;
+      }
+
+      $(".list-test").html(html);
     }
+      
+      
 
     function showAnnouncement(announces) {
         let html = "";
@@ -189,6 +267,7 @@ $(document).ready(function () {
             },
             dataType: "json",
             success: function (response) {
+                console.log(response);
                 showListTest(response);
             }
         });
@@ -251,7 +330,7 @@ $(document).ready(function () {
 
     $("#form-search-group").on("input", function () {
         let content = $(this).val().toLowerCase();
-        let result = groups.filter(item => item.mamonhoc.toLowerCase().includes(content) || item.tenmonhoc.toLowerCase().includes(content));
+        let result = groups.filter(item => item.tennhom.toLowerCase().includes(content) || item.hoten.toLowerCase().includes(content));
         showListGroup(result);
     });
 

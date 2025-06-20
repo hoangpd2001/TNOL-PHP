@@ -1,17 +1,28 @@
 $(document).ready(function () {
     $("#start-test").click(function (e) {
-        let made = $(this).data("id");
+        console.log("click")
+        const dataStr = $(this).data("test"); // đây là string
+        const data = typeof dataStr === "string" ? JSON.parse(dataStr) : dataStr;
+        console.log(data)
         e.preventDefault();
         $.ajax({
             type: "post",
             url: "./test/startTest",
             data: {
-                made: made,
+                made: data["Test"]["made"],
+                loaigiao: data["Loaigiao"]=="hocphan"?1:0,
+                manguongiao:data["Manguongiao"],
             },
             dataType: "json",
             success: function (response) {
                 if (response) {
-                    location.href = `./test/taketest/${made}`;
+                    console.log("response" , response);
+                    location.href = `./test/taketest/${
+                      data["Test"]["made"]
+                    }?loaigiao=${
+                      data["Loaigiao"] == "hocphan" ? 1 : 0
+                    }&manguongiao=${data["Manguongiao"]}`;
+
                 } else {
                     Dashmix.helpers("jq-notify", {
                         type: "danger",
@@ -22,10 +33,24 @@ $(document).ready(function () {
             },
         });
     });
+    
+    $("#continue-test").click(function (e) {
+      console.log("click");
+      const dataStr = $(this).data("test"); // đây là string
+      const data = typeof dataStr === "string" ? JSON.parse(dataStr) : dataStr;
+      console.log(data);
+      location.href = `./test/taketest/${
+        data["Test"]["made"]
+      }?loaigiao=${
+        data["Loaigiao"] == "hocphan" ? 1 : 0
+      }&manguongiao=${data["Manguongiao"]}`;
+    });
 
     $(document).on("click", "#show-exam-detail", function () {
         $("#modal-show-test").modal("show");
         let makq = $(this).data("id");
+        console.log("click")
+        console.log("makq", makq);
         $.ajax({
             type: "post",
             url: "./test/getResultDetail",

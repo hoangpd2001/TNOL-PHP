@@ -4,10 +4,11 @@ class Client extends Controller{
     public $nhommodel;
     public $dethimodel;
     public $nguoidungmodel;
-
+    public $hocPhanmodel;
     public function __construct()
     {
         $this->nhommodel = $this->model("NhomModel");
+        $this->hocPhanmodel = $this->model("HocPhanModel");
         $this->dethimodel = $this->model("DeThiModel");
         $this->nguoidungmodel = $this->model("NguoiDungModel");
         parent::__construct();
@@ -34,13 +35,32 @@ class Client extends Controller{
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
         }
     }
-
+    public function module()
+    {
+        if (AuthCore::checkPermission("tghocphan", "join")) {
+            $this->view("main_layout", [
+                "Page" => "client_module",
+                "Title" => "Học phần",
+                "Script" => "client_module",
+                "Plugin" => [
+                    "jquery-validate" => 1,
+                    "notify" => 1,
+                    "datepicker" => 1,
+                    "flatpickr" => 1,
+                    "sweetalert2" => 1,
+                    "select" => 1,
+                ]
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        }
+    }
     public function test() {
         if (AuthCore::checkPermission("tgthi", "join")) {
             $this->view("main_layout", [
-                "Page" => "test_schedule",
+                "Page" => "client_schedule_test",
                 "Title" => "Lịch kiểm tra",
-                "Script" => "test_schedule",
+                "Script" => "client_schedule_test",
                 "user_id" => $_SESSION['user_id'],
                 "Plugin" => [
                     "pagination" => [],
@@ -50,7 +70,22 @@ class Client extends Controller{
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
         }
     }
-
+    public function review()
+    {
+        if (AuthCore::checkPermission("tgthi", "join")) {
+            $this->view("main_layout", [
+                "Page" => "client_schedule_review",
+                "Title" => "Lịch kiểm tra",
+                "Script" => "client_schedule_review",
+                "user_id" => $_SESSION['user_id'],
+                "Plugin" => [
+                    "pagination" => [],
+                ],
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        }
+    }
     // /client/test pagination
     public function getQuery($filter, $input, $args) {
         AuthCore::checkAuthentication();
@@ -81,6 +116,16 @@ class Client extends Controller{
             $manguoidung = $_SESSION['user_id'];
             $hienthi = $_POST['hienthi'];
             $result = $this->nhommodel->getAllGroup_User($manguoidung,$hienthi);
+            echo json_encode($result);
+        }
+    }
+    public function loadDataModule()
+    {
+        AuthCore::checkAuthentication();
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            $manguoidung = $_SESSION['user_id'];
+            $hienthi = $_POST['hienthi'];
+            $result = $this->hocPhanmodel->getAllModule_User($manguoidung, $hienthi);
             echo json_encode($result);
         }
     }

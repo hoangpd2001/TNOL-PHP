@@ -12,11 +12,13 @@ function showData(data) {
     hour: "2-digit",
     minute: "2-digit",
   });
+  console.log(data);
   let html = "";
   data.forEach((test) => {
+
     let htmlTestState = ``;
     const open = new Date(test.thoigianbatdau);
-    const close = new Date(test.thoigianketthuc);
+    const close = new Date(open.getTime() + test.thoigianthi * 60 * 1000);
     const state = {};
     if (test.diemthi) {
       state.color = "primary";
@@ -28,7 +30,7 @@ function showData(data) {
         state.text = "Chưa mở";
       } else if (now >= +open && now <= +close) {
         state.color = "success";
-        state.text = "Chưa làm";
+        state.text = "Đang mở";
       } else {
         state.color = "danger";
         state.text = "Quá hạn";
@@ -45,27 +47,45 @@ function showData(data) {
                     <h3 class="h4 fw-bold mb-3">
                         <a href="./test/start/${
                           test.made
-                        }" class="text-dark link-fx">${test.tende}</a>
+                        }" class="text-dark link-fx">Đề: ${test.tende}</a>
                     </h3>
                     <p class="fs-sm text-muted mb-2">
                         <i class="fa fa-layer-group me-1"></i></i> <strong data-bs-toggle="tooltip" data-bs-animation="true" data-bs-placement="top" title="${
                           test.tennhom
-                        }" style="cursor:pointer">${test.tenmonhoc} - NH${
-      test.namhoc
-    } - HK${test.hocky}</strong>
+                        }" style="cursor:pointer">Môn thi: ${
+      test.tenmonhoc
+    }</strong>
                     </p>
-                    <p class="fs-sm text-muted mb-0">
-                        <i class="fa fa-clock me-1"></i> Diễn ra từ <span>${format.format(
+                     <p class="fs-sm text-muted mb-2">
+                        <i class="fa fa-users me-1"></i> Đối tượng: <span class="me-4">${
+                          test.tengiao
+                        }</span>
+                
+                    </p>
+                     <p class="fs-sm text-muted mb-2">
+                        <i class="fa fa-question-circle me-1"></i> Số câu hỏi <span class="me-4">${
+                          test.total
+                        }</span>
+                        <i class="fa fa-clock me-1"></i> Thời gian: <span>${
+                          test.thoigianthi
+                        }</span>
+                    </p>
+                    <p class="fs-sm text-muted mb-2">
+                        <i class="fa fa-calendar me-1"></i> Diễn ra từ <span  style="color:red">${format.format(
                           open
-                        )}</span> đến <span>${format.format(close)}</span>
+                        )}</span>
                     </p>
                 </div>
-                <div class="p-1 p-md-3">
+              <div class="p-1 p-md-3">
                 ${htmlTestState}
-                    <a class="btn btn-alt-info rounded-pill px-3 me-1 my-1" href="./test/start/${
-                      test.made
-                    }">Xem chi tiết</a>
-                </div>
+               <a class="btn btn-alt-info rounded-pill px-3 me-1 my-1"
+                    href="./test/start/${test.made}?loainhom=${
+                        test.loaigiao
+                      }&manhom=${test.magiao}">
+                    Xem chi tiết
+                  </a>
+
+              </div>
             </div>
         </div>
     </div>`;

@@ -1,17 +1,39 @@
 <?php
- include "./mvc/models/CauTraLoiModel.php";
+include "./mvc/models/CauTraLoiModel.php";
+include "./mvc/models/NguoiDungModel.php";
 class DeThiModel extends DB
 {
-    public function create($monthi, $nguoitao, $tende, $thoigianthi, $thoigianbatdau, $thoigianketthuc, $hienthibailam, $xemdiemthi, $xemdapan, $troncauhoi, $trondapan, $nopbaichuyentab, $loaide, $socaude, $socautb, $socaukho, $chuong, $nhom)
-    {
-        $sql = "INSERT INTO `dethi`(`monthi`, `nguoitao`, `tende`, `thoigianthi`, `thoigianbatdau`, `thoigianketthuc`, `hienthibailam`, `xemdiemthi`, `xemdapan`, `troncauhoi`, `trondapan`, `nopbaichuyentab`, `loaide`, `socaude`, `socautb`, `socaukho`) VALUES ('$monthi','$nguoitao','$tende','$thoigianthi','$thoigianbatdau','$thoigianketthuc','$hienthibailam','$xemdiemthi','$xemdapan','$troncauhoi','$trondapan','$nopbaichuyentab','$loaide','$socaude','$socautb','$socaukho')";
+    public function create(
+        $monthi,
+        $nguoitao,
+        $tende,
+        $thoigianthi,
+        $hienthibailam,
+        $xemdiemthi,
+        $xemdapan,
+        $troncauhoi,
+        $trondapan,
+        $nopbaichuyentab,
+        $loaide,
+        $socaude,
+        $socautb,
+        $socaukho,
+        $chuong,
+        $trangthai
+    ) {
+        $sql = "INSERT INTO `dethi`(`monthi`, `nguoitao`, `tende`, `thoigianthi`, 
+         `hienthibailam`, `xemdiemthi`, `xemdapan`, 
+        `troncauhoi`, `trondapan`, `nopbaichuyentab`, `loaide`, `socaude`, `socautb`,
+         `socaukho`, `trangthai`) VALUES ('$monthi','$nguoitao','$tende','$thoigianthi',
+         '$hienthibailam','$xemdiemthi','$xemdapan','$troncauhoi','$trondapan','$nopbaichuyentab',
+         '$loaide','$socaude','$socautb','$socaukho', '$trangthai')";
         $result = mysqli_query($this->con, $sql);
         if ($result) {
             $madethi = mysqli_insert_id($this->con);
             // Một đề thi giao cho nhiều nhóm
-            $result = $this->create_giaodethi($madethi, $nhom);
+            // $result = $this->create_giaodethi($madethi);
             // Một đề thi thì có nhiều chương
-            $result = $this->create_chuongdethi($madethi, $chuong);
+            //   $result = $this->create_chuongdethi($madethi, $chuong);
             return $madethi;
         } else return false;
     }
@@ -76,25 +98,50 @@ class DeThiModel extends DB
         return $valid;
     }
 
-    public function create_giaodethi($made, $nhom)
+    public function create_giaodethi($made, $nhom, $thoigianbatdau, $thoigianketthuc, $hinhthuc)
     {
         $valid = true;
-        foreach ($nhom as $manhom) {
-            $sql = "INSERT INTO `giaodethi`(`made`, `manhom`) VALUES ('$made','$manhom')";
+
+        foreach ($nhom as $ma) {
+            if ($hinhthuc == 'hocphan') {
+                $sql = "INSERT INTO `giaodethilop`(`madethi`, `mahocphan`, `thoigianbatdau`, `thoigianketthuc`) 
+                        VALUES ('$made', '$ma', '$thoigianbatdau', '$thoigianketthuc')";
+            } else {
+                $sql = "INSERT INTO `giaodethi`(`made`, `manhom`, `thoigianbatdau`, `thoigianketthuc`) 
+                        VALUES ('$made', '$ma', '$thoigianbatdau', '$thoigianketthuc')";
+            }
+
             $result = mysqli_query($this->con, $sql);
-            if (!$result) $valid = false;
+            if (!$result) {
+                $valid = false;
+            }
         }
+
         return $valid;
     }
+    public function getDetailGiao($loaigiao, $manguongiao, $made)
+    {
+        if ($loaigiao == 1) {
+            $sql = "SELECT giaodethilop.* FROM giaodethilop
+                    WHERE mahocphan = '$manguongiao' AND madethi = '$made'";
+        } else {
+            $sql = "SELECT giaodethi.* FROM giaodethi
+                    WHERE manhom = '$manguongiao' AND made = '$made'";
+        }
+        $result = mysqli_query($this->con, $sql);
+
+        return mysqli_fetch_assoc($result); 
+    }
+
 
     public function update_giaodethi($made, $nhom)
     {
-        $valid = true;
-        $sql = "DELETE FROM `giaodethi` WHERE `made`='$made'";
-        $result_del = mysqli_query($this->con, $sql);
-        if ($result_del) $result_update = $this->create_giaodethi($made, $nhom);
-        else $valid = false;
-        return $valid;
+        // $valid = true;
+        // $sql = "DELETE FROM `giaodethi` WHERE `made`='$made'";
+        // $result_del = mysqli_query($this->con, $sql);
+        // if ($result_del) $result_update = $this->create_giaodethi($made, $nhom);
+        // else $valid = false;
+        // return $valid;
     }
 
     public function update($made, $monthi, $tende, $thoigianthi, $thoigianbatdau, $thoigianketthuc, $hienthibailam, $xemdiemthi, $xemdapan, $troncauhoi, $trondapan, $nopbaichuyentab, $loaide, $socaude, $socautb, $socaukho, $chuong, $nhom)
@@ -173,28 +220,116 @@ class DeThiModel extends DB
         }
         return $dethi;
     }
-
-    // Lấy thông tin cơ bản của đề thi ()
-    public function getInfoTestBasic($made)
+    public function getByIdScheduleReview($made,  $mahocphan)
     {
-        $sql_dethi = "SELECT dethi.made, dethi.tende, dethi.thoigiantao,dethi.loaide,dethi.nguoitao,monhoc.mamonhoc, monhoc.tenmonhoc FROM dethi, monhoc WHERE made = $made AND dethi.monthi = monhoc.mamonhoc";
+        $sql_dethi = "SELECT dethi.*, monhoc.tenmonhoc, thoigianbatdau, thoigianketthuc
+         FROM dethi, monhoc, giaodethilop, hocphan
+         WHERE made = $made AND dethi.monthi = monhoc.mamonhoc and giaodethilop.madethi = dethi.made
+            And giaodethilop.mahocphan = hocphan.mahocphan 
+            And hocphan.mahocphan = '$mahocphan'" ;
         $result_dethi = mysqli_query($this->con, $sql_dethi);
         $dethi = mysqli_fetch_assoc($result_dethi);
-        if ($dethi != null) {
-            $sql_giaodethi = "SELECT giaodethi.manhom, nhom.tennhom FROM giaodethi, nhom WHERE made = $made AND giaodethi.manhom = nhom.manhom";
-            $result_giaodethi = mysqli_query($this->con, $sql_giaodethi);
-            $dethi['nhom'] = array();
-            while ($row = mysqli_fetch_assoc($result_giaodethi)) {
-                $dethi['nhom'][] = $row;
+        if ($dethi != null) {  
+            $sql_dethitudong = "SELECT machuong FROM dethitudong WHERE made = $made";
+            $result_dethitudong = mysqli_query($this->con, $sql_dethitudong);
+            $dethi['chuong'] = array();
+            while ($row = mysqli_fetch_assoc($result_dethitudong)) {
+                $dethi['chuong'][] = $row['machuong'];
             }
         }
         return $dethi;
     }
+    public function getByIdScheduleGroup($made, $manhom)
+    {
+        $sql_dethi = "SELECT dethi.*, monhoc.tenmonhoc, giaodethi.thoigianbatdau, 
+        giaodethi.thoigianketthuc
+        FROM dethi
+        JOIN monhoc ON dethi.monthi = monhoc.mamonhoc
+        JOIN giaodethi ON giaodethi.made = dethi.made
+        WHERE dethi.made = $made AND giaodethi.manhom = '$manhom'";
+
+        $result_dethi = mysqli_query($this->con, $sql_dethi);
+        $dethi = mysqli_fetch_assoc($result_dethi);
+
+        if ($dethi != null) {
+            // Lấy các chương có trong đề tự động (nếu có)
+            $sql_dethitudong = "SELECT machuong FROM dethitudong WHERE made = $made";
+            $result_dethitudong = mysqli_query($this->con, $sql_dethitudong);
+            $dethi['chuong'] = array();
+            while ($row = mysqli_fetch_assoc($result_dethitudong)) {
+                $dethi['chuong'][] = $row['machuong'];
+            }
+
+            // // Lấy tất cả các nhóm đã được giao đề này
+            // $sql_giaodethi = "SELECT manhom FROM giaodethi WHERE made = $made";
+            // $result_giaodethi = mysqli_query($this->con, $sql_giaodethi);
+            // $dethi['nhom'] = array();
+            // while ($row = mysqli_fetch_assoc($result_giaodethi)) {
+            //     $dethi['nhom'][] = $row['manhom'];
+            // }
+        }
+        
+        return $dethi;
+    }
+
+    // Lấy thông tin cơ bản của đề thi ()
+    public function getInfoTestBasic($made, $loaigiao, $manguongiao)
+    {
+        // Lấy thông tin đề thi + môn học
+        $sql_dethi = "
+            SELECT dethi.made, dethi.tende, dethi.thoigiantao, dethi.loaide, dethi.nguoitao,
+                   monhoc.mamonhoc, monhoc.tenmonhoc
+            FROM dethi
+            JOIN monhoc ON dethi.monthi = monhoc.mamonhoc
+            WHERE dethi.made = $made
+        ";
+        $result_dethi = mysqli_query($this->con, $sql_dethi);
+        $dethi = mysqli_fetch_assoc($result_dethi);
+
+        if ($dethi != null) {
+            // Chuẩn hóa chuỗi manguongiao thành mảng số
+            $arrNguonGiao = array_map('intval', explode(',', $manguongiao));
+            $inNguonGiao = implode(',', $arrNguonGiao);
+
+            // Tạo lại trường "nhom" để chứa kết quả
+            $dethi['nhom'] = array();
+
+            if ($loaigiao == 0) {
+                // Giao đề cho nhóm
+                $sql_giaodethi = "
+                    SELECT giaodethi.manhom, nhom.tennhom
+                    FROM giaodethi
+                    JOIN nhom ON giaodethi.manhom = nhom.manhom
+                    WHERE giaodethi.made = $made AND giaodethi.manhom IN ($inNguonGiao)
+                ";
+                $result = mysqli_query($this->con, $sql_giaodethi);
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $dethi['nhom'][] = $row;
+                }
+            } else {
+                // Giao đề cho học phần (sử dụng tên lớp thay vì tên học phần)
+                $sql_giaodethi = "
+                    SELECT giaodethilop.mahocphan AS manhom, lop.tenLop AS tennhom
+                    FROM giaodethilop
+                    JOIN hocphan ON giaodethilop.mahocphan = hocphan.mahocphan
+                    JOIN lop ON hocphan.malop = lop.malop
+                    WHERE giaodethilop.madethi = $made AND giaodethilop.mahocphan IN ($inNguonGiao)
+                ";
+                $result = mysqli_query($this->con, $sql_giaodethi);
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $dethi['nhom'][] = $row;
+                }
+            }
+        }
+
+        return $dethi;
+    }
+
 
     // Lấy đề thi của nhóm học phần
     public function getListTestGroup($manhom)
     {
-        $sql = "SELECT dethi.made, dethi.tende, dethi.thoigianbatdau, dethi.thoigianketthuc
+        $sql = "SELECT dethi.made, dethi.tende, dethi.trangthai, giaodethi.thoigianbatdau, giaodethi.thoigianketthuc
         FROM giaodethi, dethi
         WHERE manhom = '$manhom' AND giaodethi.made = dethi.made ORDER BY dethi.made DESC";
         $result = mysqli_query($this->con, $sql);
@@ -206,9 +341,42 @@ class DeThiModel extends DB
         }
         return $rows;
     }
+    public function getListTestModule($manhom)
+    {
+        $sql = "SELECT dethi.made, dethi.tende, dethi.trangthai, giaodethilop.thoigianbatdau, giaodethilop.thoigianketthuc
+        FROM giaodethilop, dethi
+        WHERE mahocphan = '$manhom' AND giaodethilop.madethi = dethi.made ORDER BY dethi.made DESC";
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $row['thoigianbatdau'] = date_format(date_create($row['thoigianbatdau']), "H:i d/m/Y");
+            $row['thoigianketthuc'] = date_format(date_create($row['thoigianketthuc']), "H:i d/m/Y");
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+    public function getTestByUserAndType($trangthai, $mamonhoc, $userid)
+    {
+        $nguoiDungModel = new NguoiDungModel();
+        $check = $nguoiDungModel->checkAdmin($userid);
+        $user = $check ? " " : " AND nguoitao = '" . $userid . "' ";
+        $mon = "";
+        if ($mamonhoc !== null) {
+            $mon .= " AND monthi = '$mamonhoc' ";
+        }
+        $sql = "SELECT * 
+        FROM dethi
+        WHERE  dethi.trangthai = '$trangthai' $user $mon";
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
 
     // Lấy câu hỏi của đề thi
-    public function getQuestionOfTest($made)
+    public function getQuestionOfTest($made, $user_id, $loaigiao, $manguongiao)
     {
         $sql_dethi = "select * from dethi where made = '$made'";
         $data_dethi = mysqli_fetch_assoc(mysqli_query($this->con, $sql_dethi));
@@ -218,21 +386,22 @@ class DeThiModel extends DB
         } else {
             $question = $this->getQuestionTestAuto($made);
         }
-        $makq = $this->getMaDe($made,$_SESSION['user_id']);
+        $makq = $this->getMaDe($made, $user_id, $loaigiao, $manguongiao);
         foreach ($question as $data) {
             $macauhoi = $data['macauhoi'];
             $sql = "INSERT INTO `chitietketqua`(`makq`, `macauhoi`) VALUES ('$makq','$macauhoi')";
-            $addCtKq = mysqli_query($this->con,$sql);
+            $addCtKq = mysqli_query($this->con, $sql);
         }
 
         return $question;
     }
 
-   
 
-    public function getMaDe($made, $user){
-        $sql = "SELECT * FROM `ketqua` WHERE made = '$made' and manguoidung = '$user'";
-        $result = mysqli_query($this->con,$sql);
+
+    public function getMaDe($made, $user, $loaigiao, $manguongiao)
+    {
+        $sql = "SELECT * FROM `ketqua` WHERE made = '$made' and manguoidung = '$user' and loaigiao ='$loaigiao' and manguongiao='$manguongiao' ";
+        $result = mysqli_query($this->con, $sql);
         $data = mysqli_fetch_assoc($result);
         return $data['makq'];
     }
@@ -274,7 +443,7 @@ class DeThiModel extends DB
     }
     public function getQuestionByUser($made, $user)
     {
-      
+
         $sql_ketqua = "SELECT * FROM ketqua where made = '$made' and manguoidung = '$user'";
         $result_ketqua = mysqli_query($this->con, $sql_ketqua);
         $data_ketqua = mysqli_fetch_assoc($result_ketqua);
@@ -301,7 +470,7 @@ class DeThiModel extends DB
         if ($troncauhoi == 1) {
             shuffle($rows);
         }
-      
+
         return $rows;
     }
     public function checkAutoTest($made)
@@ -311,9 +480,10 @@ class DeThiModel extends DB
         return mysqli_num_rows($result) > 0;
     }
 
-    public function getNameGroup($manhom){
+    public function getNameGroup($manhom)
+    {
         $sql = "SELECT * FROM `nhom` WHERE manhom=$manhom";
-        $result = mysqli_query($this->con,$sql);
+        $result = mysqli_query($this->con, $sql);
         $nameGroup = mysqli_fetch_assoc($result)['tennhom'];
         return $nameGroup;
     }
@@ -348,23 +518,37 @@ class DeThiModel extends DB
     }
 
     // Lấy thời gian kết thúc đề thi
-    public function getTimeTest($dethi, $nguoidung)
+    public function getTimeTest($dethi, $nguoidung, $loaigiao, $manguongiao)
     {
-        $sql = "Select * from ketqua where made = '$dethi' and manguoidung = '$nguoidung'";
-        $sql_dethi = "select * from dethi where made = '$dethi'";
+        $sql = "Select * from ketqua where made = '$dethi' and manguoidung = '$nguoidung'
+        and loaigiao = '$loaigiao' and manguongiao = '$manguongiao'";
+        if($loaigiao ==1 ){
+            $sql_giao = "select * from giaodethilop where madethi = '$dethi' and mahocphan = '$manguongiao'";
+        }else{
+            $sql_giao = "select * from giaodethi where made = '$dethi' and manhom = '$manguongiao'";
+        }
+        $sql_dethi = "select * from dethi where made = '$dethi' ";
+        $result_giao = mysqli_query($this->con, $sql_giao);
         $result_dethi = mysqli_query($this->con, $sql_dethi);
         $result = mysqli_query($this->con, $sql);
         if ($result) {
             $data = mysqli_fetch_assoc($result);
+            $data_giao = mysqli_fetch_assoc($result_giao);
             $data_dethi = mysqli_fetch_assoc($result_dethi);
             date_default_timezone_set('Asia/Ho_Chi_Minh');
-            $thoigianketthuc = date("Y-m-d H:i:s", strtotime($data['thoigianvaothi']) + ($data_dethi['thoigianthi'] * 60));
+            if($data_dethi["trangthai"] == -1){
+                $thoigianketthuc = date("Y-m-d H:i:s", strtotime($data['thoigianvaothi']) + ($data_dethi['thoigianthi'] * 60));
+            }else{
+                $thoigianketthuc = date("Y-m-d H:i:s", strtotime($data_giao['thoigianbatdau']) + ($data_dethi['thoigianthi'] * 60));
+            }
+            
             return $thoigianketthuc;
         }
         return false;
     }
 
-    public function getTimeEndTest($dethi){
+    public function getTimeEndTest($dethi)
+    {
         $sql_dethi = "select * from dethi where made = '$dethi'";
         $result_dethi = mysqli_query($this->con, $sql_dethi);
         $data_dethi = mysqli_fetch_assoc($result_dethi);
@@ -372,12 +556,13 @@ class DeThiModel extends DB
         return $thoigianketthuc;
     }
 
-    public function getGroupsTakeTests($tests) {
+    public function getGroupsTakeTests($tests)
+    {
         $string = implode(', ', $tests);
         $sql = "SELECT GDT.*, tennhom, namhoc, hocky FROM giaodethi GDT, nhom N WHERE GDT.manhom = N.manhom AND made IN ($string)";
-        $result = mysqli_query($this->con,$sql);
+        $result = mysqli_query($this->con, $sql);
         $rows = array();
-        while($row = mysqli_fetch_assoc($result)){
+        while ($row = mysqli_fetch_assoc($result)) {
             $rows[] = $row;
         }
         return $rows;
@@ -385,14 +570,41 @@ class DeThiModel extends DB
 
     public function checkStudentAllowed($manguoidung, $madethi)
     {
-        $valid = true;
-        $sql = "SELECT *
-        FROM giaodethi, chitietnhom
-        WHERE giaodethi.made = '$madethi' AND giaodethi.manhom = chitietnhom.manhom AND chitietnhom.manguoidung = '$manguoidung'";
-        $result = mysqli_query($this->con,$sql);
-        if(!mysqli_fetch_assoc($result)) $valid = false;
+        $valid = false;
+
+        // Check đề thi giao qua nhóm
+        $sql_nhom = "
+            SELECT 1
+            FROM giaodethi GD
+            JOIN chitietnhom CTN ON GD.manhom = CTN.manhom
+            WHERE GD.made = '$madethi' AND CTN.manguoidung = '$manguoidung'
+            LIMIT 1
+        ";
+        $result_nhom = mysqli_query($this->con, $sql_nhom);
+        if (mysqli_fetch_assoc($result_nhom)) {
+            $valid = true;
+        }
+
+        // Nếu chưa hợp lệ, check tiếp đề thi giao qua học phần
+        if (!$valid) {
+            $sql_hp = "
+                SELECT 1
+                FROM sinhvien SV
+                JOIN lop L ON SV.malop = L.malop
+                JOIN hocphan HP ON HP.malop = L.malop
+                JOIN giaodethilop GDTL ON GDTL.mahocphan = HP.mahocphan
+                WHERE SV.id = '$manguoidung' AND GDTL.madethi = '$madethi'
+                LIMIT 1
+            ";
+            $result_hp = mysqli_query($this->con, $sql_hp);
+            if (mysqli_fetch_assoc($result_hp)) {
+                $valid = true;
+            }
+        }
+
         return $valid;
     }
+
 
     public function getQuery($filter, $input, $args)
     {
@@ -402,7 +614,67 @@ class DeThiModel extends DB
             switch ($func) {
                 case "getUserTestSchedule":
                     // Lấy danh sách lịch thi đã được giao của người dùng
-                    $query = "SELECT T1.*, diemthi FROM (SELECT DT.made, tende, thoigianbatdau, thoigianketthuc, CTN.manhom, tennhom, tenmonhoc, namhoc, hocky FROM chitietnhom CTN, giaodethi GDT, dethi DT, monhoc MH, nhom N WHERE N.trangthai != 0 AND N.manhom = CTN.manhom AND CTN.manhom = GDT.manhom AND DT.made = GDT.made AND MH.mamonhoc = DT.monthi AND DT.trangthai = 1 AND manguoidung = '" . $args['manguoidung'] . "') T1 LEFT JOIN (SELECT DISTINCT DT.made, diemthi FROM chitietnhom CTN, giaodethi GDT, dethi DT, monhoc MH, nhom N, ketqua KQ WHERE N.manhom = CTN.manhom AND CTN.manhom = GDT.manhom AND DT.made = GDT.made AND MH.mamonhoc = DT.monthi AND KQ.made = DT.made AND DT.trangthai = 1 AND KQ.manguoidung = '" . $args['manguoidung'] . "') T2 ON T1.made = T2.made WHERE 1";
+                    $query = "
+                    SELECT * FROM (
+                        -- Giao qua nhóm
+                        SELECT 
+                            DT.made, DT.tende, GDT.thoigianbatdau, GDT.thoigianketthuc,
+                            DT.thoigianthi, (DT.socaude + DT.socautb + DT.socaukho) AS total, 
+                            N.manhom AS magiao, N.tennhom AS tengiao, MH.tenmonhoc,
+                            'nhom' AS loaigiao,
+                            T2.diemthi
+                        FROM chitietnhom CTN
+                        JOIN nhom N ON N.manhom = CTN.manhom
+                        JOIN giaodethi GDT ON GDT.manhom = CTN.manhom
+                        JOIN dethi DT ON DT.made = GDT.made
+                        JOIN monhoc MH ON MH.mamonhoc = DT.monthi
+                        LEFT JOIN (
+                            SELECT K1.made, K1.diemthi, K1.manguongiao
+                            FROM ketqua K1
+                            JOIN (
+                                SELECT made, manguongiao, MAX(thoigianvaothi) AS max_time
+                                FROM ketqua
+                                WHERE manguoidung = '" . $args['manguoidung'] . "'
+                                GROUP BY made, manguongiao
+                            ) K2 ON K1.made = K2.made AND K1.manguongiao = K2.manguongiao AND K1.thoigianvaothi = K2.max_time
+                            WHERE K1.manguoidung = '" . $args['manguoidung'] . "'
+                        ) T2 ON DT.made = T2.made AND GDT.manhom = T2.manguongiao
+                        WHERE N.trangthai != 0
+                        AND DT.trangthai = 1
+                        AND CTN.manguoidung = '" . $args['manguoidung'] . "'
+                    
+                        UNION ALL
+                    
+                        -- Giao qua học phần
+                        SELECT 
+                            DT.made, DT.tende, GDTL.thoigianbatdau, GDTL.thoigianketthuc,
+                            DT.thoigianthi, (DT.socaude + DT.socautb + DT.socaukho) as total, 
+                            HP.mahocphan AS magiao, L.tenlop AS tengiao, MH.tenmonhoc,
+                            'hocphan' AS loaigiao,
+                            T2.diemthi
+                        FROM sinhvien SV
+                        JOIN lop L ON SV.malop = L.malop
+                        JOIN hocphan HP ON HP.malop = L.malop
+                        JOIN giaodethilop GDTL ON GDTL.mahocphan = HP.mahocphan
+                        JOIN dethi DT ON DT.made = GDTL.madethi
+                        JOIN monhoc MH ON MH.mamonhoc = DT.monthi
+                        LEFT JOIN (
+                            SELECT K1.made, K1.diemthi, K1.manguongiao
+                            FROM ketqua K1
+                            JOIN (
+                                SELECT made, manguongiao, MAX(thoigianvaothi) AS max_time
+                                FROM ketqua
+                                WHERE manguoidung = '" . $args['manguoidung'] . "'
+                                GROUP BY made, manguongiao
+                            ) K2 ON K1.made = K2.made AND K1.manguongiao = K2.manguongiao AND K1.thoigianvaothi = K2.max_time
+                            WHERE K1.manguoidung = '" . $args['manguoidung'] . "'
+                        ) T2 ON DT.made = T2.made AND HP.mahocphan = T2.manguongiao
+                        WHERE SV.id = '" . $args['manguoidung'] . "'
+                        AND DT.trangthai = 1
+                    ) AS AllDeThi
+                    WHERE 1=1
+                    ";
+
                     if (isset($filter)) {
                         switch ($filter) {
                             case "0";
@@ -421,39 +693,269 @@ class DeThiModel extends DB
                         }
                     }
                     if ($input) {
-                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%')";
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%') AND DT.trangthai = 1";
                     }
-                    $query .= " ORDER BY made DESC";
+                    $query .= " ORDER BY thoigianbatdau DESC";
                     break;
-                case "getAllCreatedTest":
-                    // Lấy danh sách các đề thi đã tạo của giảng viên
-                    $query = "SELECT DT.made, tende, tenmonhoc, thoigianbatdau, thoigianketthuc, GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom, namhoc, hocky FROM dethi DT, monhoc MH, giaodethi GDT, nhom N WHERE DT.monthi = MH.mamonhoc AND DT.made = GDT.made AND N.manhom = GDT.manhom AND nguoitao = '".$args['id']."' AND DT.trangthai = 1";
+                case "getUserReviewSchedule":
+                    // Lấy danh sách lịch on luyen đã được giao của người dùng
+                    $query = "SELECT * FROM (
+    -- Đề thi giao qua nhóm
+                        SELECT 
+                            DT.made, tende, GDT.thoigianbatdau, GDT.thoigianketthuc,
+                            DT.thoigianthi, (DT.socaude + DT.socautb + DT.socaukho) AS total, 
+                            N.manhom AS magiao, N.tennhom AS tengiao, MH.tenmonhoc,
+                            'nhom' AS loaigiao,
+                            T2.diemthi
+                        FROM chitietnhom CTN
+                        JOIN nhom N ON N.manhom = CTN.manhom
+                        JOIN giaodethi GDT ON GDT.manhom = CTN.manhom
+                        JOIN dethi DT ON DT.made = GDT.made
+                        JOIN monhoc MH ON MH.mamonhoc = DT.monthi
+                        LEFT JOIN (
+                            SELECT made, diemthi, loaigiao, manguongiao
+                            FROM ketqua
+                            WHERE manguoidung = '" . $args['manguoidung'] . "'
+                        ) T2 ON DT.made = T2.made AND T2.loaigiao = '0' AND T2.manguongiao = N.manhom
+                        WHERE N.trangthai != 0
+                        AND DT.trangthai = -1
+                        AND CTN.manguoidung = '" . $args['manguoidung'] . "'
+
+                        UNION ALL
+
+                        -- Đề thi giao qua học phần
+                        SELECT 
+                            DT.made, tende, GDTL.thoigianbatdau, GDTL.thoigianketthuc, 
+                            DT.thoigianthi, (DT.socaude + DT.socautb + DT.socaukho) AS total,
+                            HP.mahocphan AS magiao, L.tenlop AS tengiao, MH.tenmonhoc,
+                            'hocphan' AS loaigiao,
+                            T2.diemthi
+                        FROM sinhvien SV
+                        JOIN lop L ON SV.malop = L.malop
+                        JOIN hocphan HP ON HP.malop = L.malop
+                        JOIN giaodethilop GDTL ON GDTL.mahocphan = HP.mahocphan
+                        JOIN dethi DT ON DT.made = GDTL.madethi
+                        JOIN monhoc MH ON MH.mamonhoc = DT.monthi
+                        LEFT JOIN (
+                            SELECT made, diemthi, loaigiao, manguongiao
+                            FROM ketqua
+                            WHERE manguoidung = '" . $args['manguoidung'] . "'
+                        ) T2 ON DT.made = T2.made AND T2.loaigiao = '1' AND T2.manguongiao = HP.mahocphan
+                        WHERE SV.id = '" . $args['manguoidung'] . "'
+                        AND DT.trangthai = -1
+                    ) AS AllDeThi
+
+    
+                                    ";
                     if (isset($filter)) {
                         switch ($filter) {
                             case "0";
-                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc AND diemthi IS NULL";
                                 break;
                             case "1";
-                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc";
+                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc AND diemthi IS NULL";
                                 break;
                             case "2";
-                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc";
+                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                break;
+                            case "3";
+                                $query .= " AND diemthi IS NOT NULL";
                                 break;
                             default:
                         }
                     }
                     if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%') AND DT.trangthai = 1";
+                    }
+                    $query .= " ORDER BY thoigianbatdau DESC";
+                    break;
+                case "getAllCreatedTest":
+                    // Lấy danh sách các đề thi đã giao của giảng viên (nhóm + học phần)
+                    $nguoiDungModel = new NguoiDungModel();
+                    $check = $nguoiDungModel->checkAdmin($args['id']);
+                    $user = $check ? " " : " AND nguoitao = '" . $args['id'] . "' ";
+                    $query = "
+                            SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT N.manhom) as manguongiao
+                            , thoigianbatdau, thoigianketthuc,
+                            GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom, namhoc, hocky,
+                            '0' AS loaigiao
+                            FROM dethi DT
+                            JOIN monhoc MH ON DT.monthi = MH.mamonhoc
+                            JOIN giaodethi GDT ON DT.made = GDT.made
+                            JOIN nhom N ON N.manhom = GDT.manhom
+                            JOIN nguoidung ND ON ND.id = N.giangvien 
+                            WHERE DT.trangthai = 1 $user
+                        ";
+
+                    if (isset($filter)) {
+                        switch ($filter) {
+                            case "0":
+                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                break;
+                            case "1":
+                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc";
+                                break;
+                            case "2":
+                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc";
+                                break;
+                        }
+                    }
+
+                    if ($input) {
                         $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%')";
                     }
-                    $query .= " GROUP BY DT.made ORDER BY DT.made DESC";
+
+                    $query .= " GROUP BY DT.made,thoigianbatdau,thoigianketthuc
+                    
+                            UNION ALL
+                    
+                            SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT HP.mahocphan) as manguongiao
+                            , thoigianbatdau, thoigianketthuc,
+                                GROUP_CONCAT(L.tenlop SEPARATOR ', ') AS nhom, 
+                                nganh.tennganh AS namhoc,         -- hoặc dùng 'Không rõ'
+                                tenkhoahoc AS hocky,          -- hoặc dùng 'Không rõ'
+                                '1' AS loaigiao
+                            FROM dethi DT
+                            JOIN monhoc MH ON DT.monthi = MH.mamonhoc
+                            JOIN giaodethilop GDTL ON DT.made = GDTL.madethi
+                            JOIN hocphan HP ON HP.mahocphan = GDTL.mahocphan
+                            JOIN lop L ON L.malop = HP.malop
+                            JOIN nganh ON nganh.manganh = L.manganh
+                            JOIN khoahoc ON  khoahoc.makhoahoc = L.makhoahoc
+                            JOIN nguoidung ND ON ND.id = HP.magiaovien
+                            WHERE  DT.trangthai = 1 $user
+                        ";
+
+                    if (isset($filter)) {
+                        switch ($filter) {
+                            case "0":
+                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                break;
+                            case "1":
+                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc";
+                                break;
+                            case "2":
+                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc";
+                                break;
+                        }
+                    }
+
+                    if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%')";
+                    }
+
+                    $query .= " GROUP BY DT.made, thoigianbatdau,thoigianketthuc
+                    
+                            ORDER BY made DESC
+                        ";
+                    break;
+
+                case "getAllCreatedReview":
+                    // Lấy danh sách các đề ôn luyệnluyện đã giao  của giảng viên
+                    $nguoiDungModel = new NguoiDungModel();
+                    $check = $nguoiDungModel->checkAdmin($args['id']);
+                    $user = $check ? " " : " AND nguoitao = '" . $args['id'] . "' ";
+                    $query = "
+                                SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT N.manhom) as manguongiao
+                                , thoigianbatdau, thoigianketthuc,
+                                GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom, namhoc, hocky,
+                                '0' AS loaigiao
+                                FROM dethi DT
+                                JOIN monhoc MH ON DT.monthi = MH.mamonhoc
+                                JOIN giaodethi GDT ON DT.made = GDT.made
+                                JOIN nhom N ON N.manhom = GDT.manhom
+                                JOIN nguoidung ND ON ND.id = N.giangvien 
+                                WHERE  DT.trangthai = -1 $user
+                            ";
+
+                    if (isset($filter)) {
+                        switch ($filter) {
+                            case "0":
+                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                break;
+                            case "1":
+                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc";
+                                break;
+                            case "2":
+                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc";
+                                break;
+                        }
+                    }
+
+                    if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%')";
+                    }
+
+                    $query .= " GROUP BY DT.made,thoigianbatdau,thoigianketthuc
+                        
+                                UNION ALL
+                        
+                                SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT HP.mahocphan) as manguongiao
+                                , thoigianbatdau, thoigianketthuc,
+                                    GROUP_CONCAT(L.tenlop SEPARATOR ', ') AS nhom, 
+                                    nganh.tennganh AS namhoc,         -- hoặc dùng 'Không rõ'
+                                    tenkhoahoc AS hocky,          -- hoặc dùng 'Không rõ'
+                                    '1' AS loaigiao
+                                FROM dethi DT
+                                JOIN monhoc MH ON DT.monthi = MH.mamonhoc
+                                JOIN giaodethilop GDTL ON DT.made = GDTL.madethi
+                                JOIN hocphan HP ON HP.mahocphan = GDTL.mahocphan
+                                JOIN lop L ON L.malop = HP.malop
+                                JOIN nganh ON nganh.manganh = L.manganh
+                                JOIN khoahoc ON  khoahoc.makhoahoc = L.makhoahoc
+                                JOIN nguoidung ND ON ND.id = HP.magiaovien
+                                WHERE  DT.trangthai = -1 $user
+                            ";
+
+                    if (isset($filter)) {
+                        switch ($filter) {
+                            case "0":
+                                $query .= " AND CURRENT_TIMESTAMP() < thoigianbatdau";
+                                break;
+                            case "1":
+                                $query .= " AND CURRENT_TIMESTAMP() BETWEEN thoigianbatdau AND thoigianketthuc";
+                                break;
+                            case "2":
+                                $query .= " AND CURRENT_TIMESTAMP() > thoigianketthuc";
+                                break;
+                        }
+                    }
+
+                    if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%')";
+                    }
+
+                    $query .= " GROUP BY DT.made, thoigianbatdau,thoigianketthuc
+                        
+                                ORDER BY made DESC
+                            ";
+                    break;
+                case "getAllCreatedTestBase":
+                    // Lấy danh sách các đề đã tạo của giảng viên
+                    $nguoiDungModel = new NguoiDungModel();
+                    $check = $nguoiDungModel->checkAdmin($args['id']);
+                    $user = $check ? " " : " AND nguoitao = '" . $args['id'] . "' ";
+                    $query = "SELECT dethi.* , nguoidung.hoten, monhoc.tenmonhoc FROM dethi, monhoc, giaovien ,nguoidung
+                        WHERE dethi.monthi = monhoc.mamonhoc and dethi.nguoitao = giaovien.magiaovien
+                         and giaovien.magiaovien = nguoidung.id $user 
+
+                    ";
+                    if (isset($filter)) {
+                        $query .= " AND dethi.trangthai = $filter";
+                    }
+
+                    if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%' OR hoten LIKE N'%$input%')";
+                    }
+                    //  $query .= " GROUP BY DT.made ORDER BY DT.made DESC";
                     break;
                 case "getQuestionsForTest":
-                    $query = "SELECT cauhoi.*, fnStripTags(noidung) AS noidungplaintext FROM cauhoi,phancong WHERE cauhoi.mamonhoc = phancong.mamonhoc AND trangthai = 1 AND phancong.manguoidung = ".$args['id']." AND cauhoi.mamonhoc = ".$args['mamonhoc'];
+                    $query = "SELECT cauhoi.*, fnStripTags(noidung) AS noidungplaintext FROM cauhoi , chuong WHERE cauhoi.machuong = chuong.machuong AND cauhoi.trangthai = 1 AND chuong.mamonhoc = '" . $args['mamonhoc'] . "'";
                     if (isset($filter['machuong'])) {
-                        $query .= " AND machuong = ".$filter['machuong'];
+                        $query .= " AND chuong.machuong = " . $filter['machuong'];
                     }
                     if (isset($filter['dokho'])) {
-                        $query .= " AND dokho = ".$filter['dokho'];
+                        $query .= " AND dokho = " . $filter['dokho'];
                     }
                     if ($input) {
                         $input_entity_encode = htmlentities($input);
@@ -465,10 +967,57 @@ class DeThiModel extends DB
         }
         return $query;
     }
-
     public function getTestsGroupWithUserResult($manhom, $manguoidung)
     {
-        $sql = "SELECT T1.*, diemthi FROM (SELECT DT.made, tende, thoigianbatdau, thoigianketthuc FROM dethi DT, giaodethi GDT WHERE DT.made = GDT.made AND DT.trangthai = 1 AND manhom = $manhom) T1 LEFT JOIN (SELECT KQ.made, diemthi FROM ketqua KQ, giaodethi GDT WHERE KQ.made = GDT.made AND manguoidung = '$manguoidung' AND GDT.manhom = $manhom) T2 ON T1.made = T2.made ORDER BY made DESC";
+        $manhom = (int)$manhom;
+        $manguoidung = addslashes($manguoidung);
+
+        $sql = "
+            SELECT 
+                DT.made, DT.tende, DT.thoigianthi, GDT.manhom, DT.trangthai, 
+                GDT.thoigianbatdau, GDT.thoigianketthuc,
+                KQ.thoigianvaothi, KQ.thoigianlambai,
+                CASE 
+                    WHEN DT.xemdiemthi = 1 THEN KQ.diemthi 
+                    ELSE NULL 
+                END AS diemthi
+            FROM giaodethi GDT
+            JOIN dethi DT ON DT.made = GDT.made
+            LEFT JOIN ketqua KQ 
+                ON KQ.made = GDT.made AND KQ.manguoidung = '$manguoidung' AND KQ.manguongiao = GDT.manhom
+            WHERE GDT.manhom = $manhom
+            ORDER BY DT.made DESC
+        ";
+
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+    public function getTestsModuleWithUserResult($mahocphan, $manguoidung)
+    {
+        $mahocphan = (int)$mahocphan;
+        $manguoidung = addslashes($manguoidung);
+
+        $sql = "
+            SELECT 
+                DT.made, DT.tende, DT.thoigianthi, GDTL.mahocphan AS manhom, DT.trangthai,
+                GDTL.thoigianbatdau, GDTL.thoigianketthuc,
+                KQ.thoigianvaothi, KQ.thoigianlambai,
+                CASE 
+                    WHEN DT.xemdiemthi = 1 THEN KQ.diemthi 
+                    ELSE NULL 
+                END AS diemthi
+            FROM giaodethilop GDTL
+            JOIN dethi DT ON DT.made = GDTL.madethi
+            LEFT JOIN ketqua KQ 
+                ON KQ.made = GDTL.madethi AND KQ.manguoidung = '$manguoidung' AND KQ.manguongiao = GDTL.mahocphan
+            WHERE GDTL.mahocphan = $mahocphan
+            ORDER BY DT.made DESC
+        ";
+
         $result = mysqli_query($this->con, $sql);
         $rows = array();
         while ($row = mysqli_fetch_assoc($result)) {

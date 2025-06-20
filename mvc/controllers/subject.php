@@ -5,11 +5,12 @@ class Subject extends Controller
 {
     public $monHocModel;
     public $chuongModel;
-
+    public $giaoVienModel;
     public function __construct()
     {
         $this->monHocModel = $this->model("MonHocModel");
         $this->chuongModel = $this->model("ChuongModel");
+        $this->giaoVienModel = $this->model("GiaoVienModel");
         require_once "./mvc/core/Pagination.php";
     }
 
@@ -48,7 +49,7 @@ class Subject extends Controller
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mamon = $_POST['mamon'];
             $result = $this->monHocModel->checkSubject($mamon);
-            echo json_encode($result);
+            echo $result;
         }
     }
 
@@ -78,7 +79,18 @@ class Subject extends Controller
         $data = $this->monHocModel->getAllSubjectAssignment($id);
         echo json_encode($data);
     }
-
+    public function getAllByFaculty()
+    {
+        $id = $_SESSION['user_id'];
+        $makhoa = $this->giaoVienModel->getFacultyByGiaoVien($id);
+        $data = $this->monHocModel->getAllByFaculty($makhoa);
+        echo json_encode($data);
+    }
+    public function getData()
+    {
+        $data = $this->monHocModel->getAll();
+        echo json_encode($data);
+    }
     public function getDetail()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {

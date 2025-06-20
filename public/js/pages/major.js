@@ -13,9 +13,7 @@ Dashmix.onLoad(() =>
           tennganh: {
             required: true,
           },
-          tenkhoa: {
-            required: true,
-          },
+
         },
         messages: {
           manganh: {
@@ -25,9 +23,7 @@ Dashmix.onLoad(() =>
           tennganh: {
             required: "Vui lòng cung cấp tên ngành",
           },
-          tenkhoa: {
-            required: "Vui lòng cho biết trưởng ngành",
-          },
+       
         },
       });
     }
@@ -155,15 +151,14 @@ $(document).ready(function () {
   }
 
   $("#add_major").on("click", function () {
-    let manganh = $("#manganh").val();
-    $("#tenkhoa").val("");
-    if ($(".form-add-major").valid() && checkTonTai(manganh)) {
-      loadFaculties(function () {
+
+
+    if ($(".form-add-major").valid()) {
+     
         $.ajax({
           type: "post",
           url: "./major/add",
           data: {
-            manganh: manganh,
             tennganh: $("#tennganh").val(),
             makhoa: $("#tenkhoa").val(),
           },
@@ -188,7 +183,7 @@ $(document).ready(function () {
             }
           },
         });
-      });
+    
     }
   });
 

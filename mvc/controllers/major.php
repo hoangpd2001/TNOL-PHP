@@ -34,11 +34,11 @@ class Major extends Controller
     public function add()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manganh = $_POST['manganh'];
+          
             $tennganh = $_POST['tennganh'];
             $makhoa = $_POST['makhoa'];
             //   $trangthai = $_POST['trangthai'];
-            $result = $this->majorModel->create($manganh, $tennganh, $makhoa, 1);
+            $result = $this->majorModel->create($tennganh, $makhoa, 1);
             echo $result;
         }
     }

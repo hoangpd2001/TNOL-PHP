@@ -1,11 +1,12 @@
 <?php
+
 class NhomModel extends DB
 {
-    public function create($tennhom, $ghichu, $namhoc, $hocky, $giangvien, $mamonhoc)
+    public function create($tennhom, $ghichu, $namhoc, $hocky, $giangvien)
     {
         $valid = true;
         $mamoi = substr(md5(mt_rand()), 0, 7);
-        $sql = "INSERT INTO `nhom`(`tennhom`, `ghichu`, `mamoi`,`namhoc`, `hocky`, `giangvien`, `mamonhoc`) VALUES ('$tennhom','$ghichu','$mamoi','$namhoc','$hocky','$giangvien','$mamonhoc')";
+        $sql = "INSERT INTO `nhom`(`tennhom`, `ghichu`, `mamoi`,`namhoc`, `hocky`, `giangvien`) VALUES ('$tennhom','$ghichu','$mamoi','$namhoc','$hocky','$giangvien')";
         $result = mysqli_query($this->con, $sql);
         if (!$result) {
             $valid = false;
@@ -13,10 +14,10 @@ class NhomModel extends DB
         return $valid;
     }
 
-    public function update($manhom, $tennhom, $ghichu, $namhoc, $hocky, $mamonhoc)
+    public function update($manhom, $tennhom, $ghichu, $namhoc, $hocky)
     {
         $valid = true;
-        $sql = "UPDATE `nhom` SET `tennhom`='$tennhom',`ghichu`='$ghichu',`namhoc`='$namhoc',`hocky`='$hocky',`mamonhoc`='$mamonhoc' WHERE `manhom`='$manhom'";
+        $sql = "UPDATE `nhom` SET `tennhom`='$tennhom',`ghichu`='$ghichu',`namhoc`='$namhoc',`hocky`='$hocky' WHERE `manhom`='$manhom'";
         $result = mysqli_query($this->con, $sql);
         if (!$result) {
             $valid = false;
@@ -66,10 +67,18 @@ class NhomModel extends DB
     // Lấy tất cả nhóm của người tạo và gom lại theo mã môn học, năm học, học kỳ
     public function getBySubject($nguoitao, $hienthi)
     {
+        $filter = "";
+        // if ($manganh) {
+        //     $filter .= " AND n.manganh = '$manganh'";
+        // }
+        $nguoidungModel = new NguoiDungModel();
+        if (!$nguoidungModel->checkAdmin($nguoitao)) {
+            $filter .= " AND nhom.giangvien = '$nguoitao'";
+        }
         $sht = $hienthi == 2 ? "" : "AND nhom.hienthi = $hienthi";
-        $sql = "SELECT monhoc.mamonhoc, monhoc.tenmonhoc, nhom.namhoc, nhom.hocky, nhom.manhom, nhom.tennhom, nhom.ghichu, nhom.siso, nhom.hienthi
-        FROM nhom, monhoc
-        WHERE nhom.mamonhoc = monhoc.mamonhoc AND nhom.giangvien = '$nguoitao' AND nhom.trangthai = 1 $sht";
+        $sql = "SELECT nhom.namhoc, nhom.hocky, nhom.manhom, nhom.tennhom, nhom.ghichu, nhom.siso, nhom.hienthi, nhom.giangvien, nguoidung.hoten
+        FROM nhom, nguoidung
+        WHERE nhom.giangvien = nguoidung.id AND nhom.trangthai = 1 $sht " . $filter;
         $result = mysqli_query($this->con, $sql);
         $rows = [];
         while ($row = mysqli_fetch_assoc($result)) {
@@ -79,7 +88,7 @@ class NhomModel extends DB
         foreach ($rows as $item) {
             $foundIndex = -1;
             foreach ($newArray as $key => $newItem) {
-                if ($newItem["mamonhoc"] == $item["mamonhoc"] && $newItem["namhoc"] == $item["namhoc"] && $newItem["hocky"] == $item["hocky"]) {
+                if ($newItem["namhoc"] == $item["namhoc"] && $newItem["hocky"] == $item["hocky"] && $newItem["giangvien"] == $item["giangvien"]) {
                     $foundIndex = $key;
                     break;
                 }
@@ -90,13 +99,15 @@ class NhomModel extends DB
                 "ghichu" => $item["ghichu"],
                 "siso" => $item["siso"],
                 "hienthi" => $item["hienthi"]
+                
             ];
             if ($foundIndex == -1) {
                 $newArray[] = [
-                    "mamonhoc" => $item["mamonhoc"],
-                    "tenmonhoc" => $item["tenmonhoc"],
+                  
                     "namhoc" => $item["namhoc"],
                     "hocky" => $item["hocky"],
+                    "giangvien" => $item["giangvien"],
+                    "hoten"=>$item["hoten"],
                     "nhom" => [$detail_group],
                 ];
             } else {
@@ -169,10 +180,17 @@ class NhomModel extends DB
     // Lấy các nhóm mà sinh viên tham gia
     public function getAllGroup_User($user_id, $hienthi)
     {
-        $sql = "SELECT monhoc.mamonhoc,monhoc.tenmonhoc,nhom.manhom, nhom.tennhom, namhoc, hocky ,nguoidung.hoten, nguoidung.avatar,chitietnhom.hienthi
-        FROM chitietnhom, nhom, nguoidung, monhoc
-        WHERE chitietnhom.manhom = nhom.manhom AND nguoidung.id = nhom.giangvien AND monhoc.mamonhoc = nhom.mamonhoc AND chitietnhom.manguoidung = $user_id
-        AND chitietnhom.hienthi = $hienthi AND nhom.trangthai != 0";
+        $sql = "SELECT nhom.manhom, nhom.tennhom, nhom.namhoc, nhom.hocky, 
+               gv.hoten AS hoten, gv.avatar AS avatar, 
+               chitietnhom.hienthi
+        FROM chitietnhom
+        JOIN nhom ON chitietnhom.manhom = nhom.manhom
+        JOIN nguoidung AS gv ON gv.id = nhom.giangvien
+        JOIN nguoidung AS sv ON sv.id = chitietnhom.manguoidung
+        WHERE chitietnhom.manguoidung = '$user_id'
+          AND chitietnhom.hienthi = $hienthi
+          AND nhom.trangthai != 0";
+
         $result = mysqli_query($this->con, $sql);
         $rows = array();
         while ($row = mysqli_fetch_assoc($result)) {
@@ -184,9 +202,9 @@ class NhomModel extends DB
     // Lấy chi tiết một nhóm mà sinh viên tham gia
     public function getDetailGroup($manhom)
     {
-        $sql = "SELECT monhoc.mamonhoc,monhoc.tenmonhoc,nhom.manhom, nhom.tennhom, namhoc, hocky, nhom.giangvien, nguoidung.hoten, nguoidung.avatar
-        FROM nhom, nguoidung, monhoc
-        WHERE nguoidung.id = nhom.giangvien AND monhoc.mamonhoc = nhom.mamonhoc AND nhom.manhom = $manhom";
+        $sql = "SELECT nhom.manhom, nhom.tennhom, namhoc, hocky, nhom.giangvien, nguoidung.hoten, nguoidung.avatar
+        FROM nhom, nguoidung
+        WHERE nguoidung.id = nhom.giangvien  AND nhom.manhom = $manhom";
         $result = mysqli_query($this->con, $sql);
         return mysqli_fetch_assoc($result);
     }

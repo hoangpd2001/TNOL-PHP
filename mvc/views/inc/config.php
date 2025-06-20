@@ -10,15 +10,27 @@ $GLOBALS['navbar'] = [
         'type'  => 'heading',
         'navbarItem' => [
             array(
-                'name'  => 'Học phần',
+                'name'  => 'Nhóm',
                 'icon'  => 'fa fa-users-line',
                 'url'   => 'client/group',
+                'role' => 'tghocphan'
+            ),
+            array(
+                'name'  => 'Học phần',
+                'icon'  => 'fa fa-users-line',
+                'url'   => 'client/module',
                 'role' => 'tghocphan'
             ),
             array(
                 'name'  => 'Đề thi',
                 'icon'  => 'fa fa-graduation-cap',
                 'url'   => 'client/test',
+                'role' => 'tgthi'
+            ),
+            array(
+                'name'  => 'Bài tập',
+                'icon'  => 'fa fa-graduation-cap',
+                'url'   => 'client/review',
                 'role' => 'tgthi'
             ),
         ]
@@ -70,6 +82,12 @@ $GLOBALS['navbar'] = [
                 'role' => 'cauhoi'
             ),
             array(
+                'name'  => 'Giáo viên',
+                'icon'  => 'fa fa-user-friends',
+                'url'   => 'teacher',
+                'role' => 'nguoidung'
+            ),
+            array(
                 'name'  => 'Người dùng',
                 'icon'  => 'fa fa-user-friends',
                 'url'   => 'user',
@@ -88,9 +106,27 @@ $GLOBALS['navbar'] = [
                 'role' => 'phancong'
             ),
             array(
-                'name'  => 'Đề kiểm tra',
+                'name'  => 'Thống kê KQ kiểm tra',
                 'icon'  => 'fa fa-file',
                 'url'   => 'test',
+                'role' => 'dethi'
+            ),
+            array(
+                'name'  => 'Thống kê KQ ôn luyện',
+                'icon'  => 'fa fa-file',
+                'url'   => 'test/review',
+                'role' => 'dethi'
+            ),
+            array(
+                'name'  => 'Kho đề',
+                'icon'  => 'fa fa-file',
+                'url'   => 'test/base',
+                'role' => 'dethi'
+            ),
+            array(
+                'name'  => 'Giao đề',
+                'icon'  => 'fa fa-file',
+                'url'   => 'test/assign',
                 'role' => 'dethi'
             ),
             array(
@@ -122,11 +158,13 @@ $GLOBALS['navbar'] = [
 ];
 
 // Xử lý url để active navbar
-function getActiveNav() {
-    $directoryURI = $_SERVER['REQUEST_URI'];
-    $path = parse_url($directoryURI, PHP_URL_PATH);
-    $components = explode('/',$path);
-    return $components[2];
+function getActiveNav()
+{
+    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $parts = explode('/', trim($path, '/')); // ['Quanlythitracnghiem-main', 'test', 'haha']
+
+    // Trả về test hoặc test/haha nếu có
+    return isset($parts[2]) ? $parts[1] . '/' . $parts[2] : ($parts[1] ?? '');
 }
 
 function build_navbar() {

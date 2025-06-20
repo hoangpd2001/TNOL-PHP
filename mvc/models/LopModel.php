@@ -1,22 +1,22 @@
 <?php
 class LopModel extends DB
 {
-    public function create($malop, $tenlop, $manganh, $makhoahoc, $magiaovien)
+    public function create($tenlop, $manganh, $makhoahoc, $magiaovien)
     {
         $valid = true;
-        $sql = "INSERT INTO `lop`(`malop`, `tenlop`, `manganh`, `makhoahoc`, `magiaovien`, `trangthai`) 
-                VALUES ('$malop', '$tenlop', '$manganh', '$makhoahoc', '$magiaovien', 1)";
+        $sql = "INSERT INTO `lop`(`tenlop`, `manganh`, `makhoahoc`, `magiaovien`, `trangthai`) 
+                VALUES ( '$tenlop', '$manganh', '$makhoahoc', '$magiaovien', 1)";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
-        return $valid;
+        return $result;
     }
 
-    public function update($id, $malop, $tenlop, $manganh, $makhoahoc, $magiaovien)
+    public function update($malop, $tenlop, $manganh, $makhoahoc, $magiaovien, $trangthai)
     {
         $valid = true;
         $sql = "UPDATE `lop` 
-                SET `malop`='$malop', `tenlop`='$tenlop', `manganh`='$manganh', `makhoahoc`='$makhoahoc', `magiaovien`='$magiaovien' 
-                WHERE `malop` = '$id'";
+                SET `tenlop`='$tenlop', `manganh`='$manganh', `makhoahoc`='$makhoahoc', `magiaovien`='$magiaovien', trangthai = '$trangthai' 
+                WHERE `malop` = '$malop'";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
         return $valid;
@@ -33,7 +33,7 @@ class LopModel extends DB
 
     public function getAll()
     {
-        $sql = "SELECT * FROM `lop` WHERE `trangthai` = 1";
+        $sql = "SELECT lop.*, khoahoc.tenkhoahoc FROM `lop`, khoahoc WHERE lop.makhoahoc = khoahoc.makhoahoc and lop.`trangthai` = 1";
         $result = mysqli_query($this->con, $sql);
         $rows = [];
         while ($row = mysqli_fetch_assoc($result)) {
@@ -90,7 +90,18 @@ class LopModel extends DB
             return $this->getQueryWithInput($filter, $input, $args);
         }
 
-        $query = "SELECT * , makhoa, count(sinhvien.id) as tongsinhvien FROM `lop`,  `nganh`,`sinhvien` WHERE lop.manganh= nganh.manganh And sinhvien.malop = lop.malop AND lop.`trangthai` = 1";
+        $query = " SELECT 
+        lop.*, 
+        nganh.makhoa, 
+        nganh.tennganh,
+        nguoidung.id,
+        nguoidung.hoten,
+        COUNT(sinhvien.id) AS tongsinhvien 
+    FROM lop
+    INNER JOIN nganh ON lop.manganh = nganh.manganh
+    INNER join nguoidung on nguoidung.id = lop.magiaovien
+    LEFT JOIN sinhvien ON sinhvien.malop = lop.malop
+    WHERE 1 = 1";
         if (isset($filter)) {
             if (isset($filter['makhoa'])) {
                 $query .= " AND makhoa = '" . $filter['makhoa'] . "'";
@@ -101,14 +112,28 @@ class LopModel extends DB
             if (isset($filter['makhoahoc'])) {
                 $query .= " AND makhoahoc = '" . $filter['makhoahoc'] . "'";
             }
+            if (isset($filter['trangthai'])) {
+                $query .= " AND lop.trangthai = '" . $filter['trangthai'] . "'";
+            }
         }
-        $query .= " GROUP BY lop.malop, lop.tenlop, lop.manganh, lop.makhoahoc, lop.trangthai, magiaovien, makhoa";
+        $query .= " GROUP BY lop.malop, lop.tenlop, lop.manganh, lop.makhoahoc, lop.trangthai, magiaovien, makhoa, nguoidung.id, nguoidung.hoten, nganh.tennganh";
         return $query;
     }
 
     public function getQueryWithInput($filter, $input, $args)
     {
-        $query = "SELECT * , makhoa FROM `lop`,  `nganh` WHERE lop.manganh= nganh.manganh AND lop.`trangthai` = 1 
+        $query = " SELECT 
+        lop.*, 
+        nganh.makhoa, 
+        nganh.tennganh,
+        nguoidung.id,
+        nguoidung.hoten,
+        COUNT(sinhvien.id) AS tongsinhvien 
+    FROM lop
+    INNER JOIN nganh ON lop.manganh = nganh.manganh
+    INNER join nguoidung on nguoidung.id = lop.magiaovien
+    LEFT JOIN sinhvien ON sinhvien.malop = lop.malop
+    WHERE 1 = 1
                   AND (`malop` LIKE '%$input%' OR `tenlop` LIKE N'%$input%')";
         if (isset($filter)) {
             if (isset($filter['makhoa'])) {
@@ -120,7 +145,12 @@ class LopModel extends DB
             if (isset($filter['makhoahoc'])) {
                 $query .= " AND makhoahoc = '" . $filter['makhoahoc'] . "'";
             }
+            if (isset($filter['trangthai'])) {
+                $query .= " AND lop.trangthai = '" . $filter['trangthai'] . "'";
+            }
         }
+        $query .= " GROUP BY lop.malop, lop.tenlop, lop.manganh, lop.makhoahoc, lop.trangthai, magiaovien, makhoa, nguoidung.id, nguoidung.hoten, nganh.tennganh";
+
         return $query;
     }
 }

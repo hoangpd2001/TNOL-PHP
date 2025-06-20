@@ -1,6 +1,10 @@
 <?php
 require_once 'vendor/autoload.php';
 require_once './mvc/models/NguoiDungModel.php';
+
+use Google\Service\Oauth2;
+
+
 class GoogleAuth extends DB{
 
     protected $client;

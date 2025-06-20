@@ -8,7 +8,7 @@ Dashmix.onLoad(() =>
           rules: {
             mamonhoc: {
               required: !0,
-              digits: true,
+           
             },
             tenmonhoc: {
               required: !0,
@@ -29,7 +29,7 @@ Dashmix.onLoad(() =>
           messages: {
             mamonhoc: {
               required: "Vui lòng nhập mã môn học",
-              digits: "Mã môn học phải là các ký tự số",
+             
             },
             tenmonhoc: {
               required: "Vui lòng cung cấp tên môn học",
@@ -165,32 +165,31 @@ $(document).ready(async function () {
   });
 
   function checkTonTai(mamon) {
-    let check = true;
+    let isExisted = false;
     $.ajax({
       type: "post",
       url: "./subject/checkSubject",
-      data: {
-        mamon: mamon,
-      },
+      data: { mamon: mamon },
       async: false,
       dataType: "json",
       success: function (response) {
-        if (response.length !== 0) {
+        if (response) {
           Dashmix.helpers("jq-notify", {
             type: "danger",
             icon: "fa fa-times me-1",
-            message: `Môn học đã tồn tại!`,
+            message: "Môn học đã tồn tại!",
           });
-          check = false;
+          isExisted = true;
         }
       },
     });
-    return check;
+    return isExisted;
   }
+  
 
   $("#add_subject").on("click", function () {
     let mamon = $("#mamonhoc").val();
-    if ($(".form-add-subject").valid() && checkTonTai(mamon)) {
+    if ($(".form-add-subject").valid() && !checkTonTai(mamon)) {
       $.ajax({
         type: "post",
         url: "./subject/add",

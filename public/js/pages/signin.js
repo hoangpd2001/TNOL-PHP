@@ -6,7 +6,7 @@ Dashmix.onLoad(() =>
           rules: {
             "login-username": {
               required: !0,
-              digits: true,
+              
             },
             "login-password": {
               required: !0,
@@ -16,7 +16,7 @@ Dashmix.onLoad(() =>
           messages: {
             "login-username": {
               required: "Vui lòng nhập mã người dùng",
-              digits: "Mã người dùng phải là số",
+           
             },
             "login-password": {
               required: "Vui lòng nhập mã mật khẩu",

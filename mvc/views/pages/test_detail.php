@@ -1,4 +1,5 @@
-<div class="row g-0 flex-md-grow-1" id="chitietdethi" data-id="<?php echo $data["Test"]["made"] ?>">
+<div class="row g-0 flex-md-grow-1" id="chitietdethi" data-id="<?php echo $data["Test"]["made"] ?>"
+    data-loaigiao="<?php echo $data["Loaigiao"] ?>" data-manguongiao="<?php echo $data["Manguongiao"]?>">
     <div class="content content-full">
         <div class="block block-rounded">
             <ul class="nav nav-tabs nav-tabs-alt align-items-center" role="tablist">
@@ -139,7 +140,7 @@
                             <div class="block block-rounded block-fx-shadow">
                                 <div class="block-content block-content-full d-flex align-items-center justify-content-between">
                                     <div class="me-3">
-                                        <p class="fs-lg fw-semibold mb-0"id="diem_duoi_1">1</p>
+                                        <p class="fs-lg fw-semibold mb-0" id="diem_duoi_1">1</p>
                                         <p class="text-muted mb-0">Số thí sinh điểm <= 1</p>
                                     </div>
                                     <div class="item item-circle bg-body-light">
@@ -243,7 +244,11 @@
             <ul class="nav nav-pills nav-justified push">
                 <?php
                 foreach ($data["Test"]["nhom"] as $nhom) {
-                    echo '<li class="nav-item me-1 mb-2"><a class="nav-link border text-muted" href="./module/detail/' . $nhom['manhom'] . '">' . $nhom['tennhom'] . '</a></li>';
+                    echo '<li class="nav-item me-1 mb-2">
+                    <a class="nav-link border text-muted" href="./'
+                        . ($data["Loaigiao"] == 1 ? "classmodule/" : "module/")
+                        . 'detail/' . $nhom['manhom'] . '">'
+                        . $nhom['tennhom'] . '</a></li>';
                 }
                 ?>
             </ul>

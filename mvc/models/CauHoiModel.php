@@ -1,16 +1,16 @@
 <?php
 class CauHoiModel extends DB{
-    public function create($noidung, $dokho, $mamonhoc, $machuong, $nguoitao)
+    public function create($noidung, $dokho, $machuong, $nguoitao,$trangthai)
     {
-        $sql = "INSERT INTO `cauhoi`(`noidung`, `dokho`, `mamonhoc`, `machuong`, `nguoitao`) VALUES ('$noidung','$dokho','$mamonhoc','$machuong','$nguoitao')";
+        $sql = "INSERT INTO `cauhoi`(`noidung`, `dokho`,  `machuong`, `nguoitao`, trangthai) VALUES ('$noidung','$dokho','$machuong','$nguoitao', '$trangthai')";
         $result = mysqli_query($this->con, $sql);
         return $this->con;
     }
 
-    public function update($macauhoi, $noidung, $dokho, $mamonhoc, $machuong, $nguoitao)
+    public function update($macauhoi, $noidung, $dokho, $machuong, $nguoitao)
     {
         $valid = true;
-        $sql = "UPDATE `cauhoi` SET `noidung`='$noidung',`dokho`='$dokho',`mamonhoc`='$mamonhoc',`machuong`='$machuong',`nguoitao`='$nguoitao' WHERE `macauhoi`=$macauhoi";
+        $sql = "UPDATE `cauhoi` SET `noidung`='$noidung',`dokho`='$dokho',`machuong`='$machuong' WHERE `macauhoi`=$macauhoi";
         $result = mysqli_query($this->con, $sql);
         if(!$result) $valid = false;
         return $valid;
@@ -38,7 +38,7 @@ class CauHoiModel extends DB{
 
     public function getById($macauhoi)
     {
-        $sql = "SELECT * FROM `cauhoi` WHERE `macauhoi` = $macauhoi";
+        $sql = "SELECT cauhoi.*, mamonhoc FROM `cauhoi`, chuong WHERE `macauhoi` = $macauhoi and cauhoi.machuong = chuong.machuong";
         $result = mysqli_query($this->con,$sql);
         return mysqli_fetch_assoc($result);
     }
@@ -97,58 +97,84 @@ class CauHoiModel extends DB{
         return count($rows)/$limit;
     }
 
-    public function getQueryWithInput($filter, $input, $args) {
+    public function getQueryWithInput($filter, $input, $args)
+    {
         $input_entity_encode = htmlentities($input);
-        $query = "SELECT *, fnStripTags(noidung) FROM cauhoi JOIN monhoc on cauhoi.mamonhoc = monhoc.mamonhoc WHERE (noidung LIKE N'%${input}%' OR fnStripTags(noidung) LIKE N'%${input_entity_encode}%') AND cauhoi.trangthai='1'";
+        $query = "
+            SELECT *, fnStripTags(noidung) 
+            FROM cauhoi 
+            JOIN chuong ON cauhoi.machuong = chuong.machuong 
+            JOIN monhoc ON chuong.mamonhoc = monhoc.mamonhoc 
+            WHERE (noidung LIKE N'%${input}%' OR fnStripTags(noidung) LIKE N'%${input_entity_encode}%') 
+            AND cauhoi.trangthai = '1'
+        ";
+
         if (isset($filter)) {
-            if (isset($filter['mamonhoc'])) {
-                $query .= " AND monhoc.mamonhoc = ".$filter['mamonhoc'];
+            if (!empty($filter['mamonhoc'])) {
+                $query .= " AND monhoc.mamonhoc = '" . $filter['mamonhoc'] . "'";
             }
-            if (isset($filter['machuong'])) {
-                $query .= " AND machuong = ".$filter['machuong'];
+            if (!empty($filter['machuong'])) {
+                $query .= " AND chuong.machuong = " . $filter['machuong'];
             }
-            if (isset($filter['dokho']) && $filter['dokho'] != 0) {
-                $query .= " AND dokho = ".$filter['dokho'];
+            if (!empty($filter['dokho']) && $filter['dokho'] != 0) {
+                $query .= " AND cauhoi.dokho = " . $filter['dokho'];
             }
         }
+
         return $query;
     }
 
-    public function getQuery($filter, $input, $args) {
+    public function getQuery($filter, $input, $args)
+    {
         if ($input) {
             return $this->getQueryWithInput($filter, $input, $args);
         }
-        $query = "SELECT * FROM cauhoi, monhoc,phancong WHERE cauhoi.mamonhoc = monhoc.mamonhoc AND cauhoi.trangthai = 1 AND phancong.manguoidung = '".$args['id']."' AND phancong.mamonhoc = cauhoi.mamonhoc";
+
+        $query = "
+            SELECT * 
+            FROM cauhoi 
+            JOIN chuong ON cauhoi.machuong = chuong.machuong 
+            JOIN monhoc ON chuong.mamonhoc = monhoc.mamonhoc 
+            WHERE cauhoi.trangthai = 1 
+           ";
+
         if (isset($filter)) {
-            if (isset($filter['mamonhoc'])) {
-                $query .= " AND monhoc.mamonhoc = ".$filter['mamonhoc'];
+            if (!empty($filter['mamonhoc'])) {
+                $query .= " AND monhoc.mamonhoc = '" . $filter['mamonhoc'] . "'";
             }
-            if (isset($filter['machuong'])) {
-                $query .= " AND machuong = ".$filter['machuong'];
+            if (!empty($filter['machuong'])) {
+                $query .= " AND chuong.machuong = " . $filter['machuong'];
             }
-            if (isset($filter['dokho']) && $filter['dokho'] != 0) {
-                $query .= " AND dokho = ".$filter['dokho'];
+            if (!empty($filter['dokho']) && $filter['dokho'] != 0) {
+                $query .= " AND cauhoi.dokho = " . $filter['dokho'];
             }
         }
+
         return $query;
     }
 
-    public function getsoluongcauhoi($chuong,$monhoc,$dokho)
+    public function getsoluongcauhoi($chuong, $monhoc, $dokho)
     {
         $c = "";
-        $mh = null;
-        if(count($chuong) != 0) {
+        $mh = "";
+
+        if (is_array($chuong) && count($chuong) > 0) {
             foreach ($chuong as $key => $machuong) {
-                if($key == count($chuong) - 1) {
-                    $c .= "machuong = $machuong";
-                } else {
-                    $c .= "machuong = $machuong OR ";
+                $c .= "chuong.machuong = '$machuong'";
+                if ($key < count($chuong) - 1) {
+                    $c .= " OR ";
                 }
             }
+            $dieukien = "($c)";
         } else {
-            $mh = "mamonhoc = $monhoc";
+            $dieukien = "chuong.mamonhoc = '$monhoc'";
         }
-        $sql = "SELECT COUNT(*) as soluong FROM cauhoi WHERE dokho = $dokho AND $c $mh";
+
+        $sql = "SELECT COUNT(cauhoi.macauhoi) AS soluong
+                FROM cauhoi, chuong
+                WHERE chuong.machuong = cauhoi.machuong 
+                AND $dieukien AND cauhoi.dokho = $dokho";
+
         $result = mysqli_query($this->con, $sql);
         return mysqli_fetch_assoc($result)['soluong'];
     }

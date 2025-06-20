@@ -3,11 +3,12 @@ require_once 'vendor/autoload.php';
 require_once 'vendor/phpoffice/phpexcel/Classes/PHPExcel/IOFactory.php';
 class Classmodule extends Controller
 {
-    public $nhomModel;
-
+    public $hocphanModel;
+    public $nguoiDungModel;
     function __construct()
     {
-        $this->nhomModel = $this->model("HocPhanModel");
+        $this->hocphanModel = $this->model("HocPhanModel");
+        $this->nguoiDungModel = $this->model("NguoiDungModel");
         parent::__construct();
         require_once "./mvc/core/Pagination.php";
     }
@@ -30,12 +31,13 @@ class Classmodule extends Controller
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
     }
 
-    public function detail($manhom)
+    public function detail($mahocphan)
     {
-        $chitietnhom = $this->nhomModel->getDetailGroup($manhom);
-        if (AuthCore::checkPermission("hocphan", "view") && $_SESSION['user_id'] == $chitietnhom['giangvien']) {
+        $chitiethocphan = $this->hocphanModel->getDetailGroup($mahocphan);
+        $check = $this->nguoiDungModel->checkAdmin($_SESSION['user_id']);
+        if (AuthCore::checkPermission("hocphan", "view") && ($_SESSION['user_id'] == $chitiethocphan['magiaovien'] || $check)) {
             $this->view("main_layout", [
-                "Page" => "class_detail",
+                "Page" => "classroom_detail",
                 "Title" => "Quản lý nhóm",
                 "Plugin" => [
                     "datepicker" => 1,
@@ -45,8 +47,8 @@ class Classmodule extends Controller
                     "notify" => 1,
                     "pagination" => [],
                 ],
-                "Script" => "class_detail",
-                "Detail" => $chitietnhom
+                "Script" => "classroom_detail",
+                "Detail" => $chitiethocphan
             ]);
         } else
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
@@ -56,9 +58,9 @@ class Classmodule extends Controller
     {
         //AuthCore::checkAuthentication();
         if ($_SERVER['REQUEST_METHOD'] == "POST") {
-            // $hienthi = $_POST['hienthi'];
-            // $user_id = $_SESSION['user_id'];
-            $result = $this->nhomModel->getBySubject(1,2);
+             $hienthi = $_POST['hienthi'];
+             $user_id = $_SESSION['user_id'];
+            $result = $this->hocphanModel->getBySubject($hienthi,$user_id);
             echo json_encode($result);
         } else
             echo json_encode(false);
@@ -72,7 +74,7 @@ class Classmodule extends Controller
             $monhoc = $_POST['monhoc'];
             $magiaovien = $_POST['magiaovien'];
             $ghichu = $_POST['ghichu'];
-            $result = $this->nhomModel->create($mangnganh,$makhoahoc,$monhoc,$magiaovien,$ghichu);
+            $result = $this->hocphanModel->create($mangnganh,$makhoahoc,$monhoc,$magiaovien,$ghichu);
             echo $result;
         } else
             echo json_encode(false);
@@ -81,8 +83,8 @@ class Classmodule extends Controller
     public function delete()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "delete")) {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->delete($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->delete($mahocphan);
             echo $result;
         } else
             echo json_encode(false);
@@ -91,10 +93,10 @@ class Classmodule extends Controller
     public function update()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "update")) {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $magiaovien = $_POST['magiaovien'];
             $ghichu = $_POST['ghichu'];
-            $result = $this->nhomModel->update($manhom,  $ghichu, $magiaovien);
+            $result = $this->hocphanModel->update($mahocphan,  $ghichu, $magiaovien);
             echo json_encode($result);
         } else
             echo json_encode(false);
@@ -103,9 +105,9 @@ class Classmodule extends Controller
     public function hide()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $giatri = $_POST['giatri'];
-            $result = $this->nhomModel->hide($manhom, $giatri);
+            $result = $this->hocphanModel->hide($mahocphan, $giatri);
             echo $result;
         } else
             echo json_encode(false);
@@ -115,7 +117,7 @@ class Classmodule extends Controller
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" ) {
             $mahocphan = $_POST['mahocphan'];
-            $result = $this->nhomModel->getById($mahocphan);
+            $result = $this->hocphanModel->getById($mahocphan);
             echo json_encode($result);
         } else
             echo json_encode(false);
@@ -125,8 +127,8 @@ class Classmodule extends Controller
     public function updateInvitedCode()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->updateInvitedCode($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->updateInvitedCode($mahocphan);
             echo $result;
         }
     }
@@ -134,8 +136,8 @@ class Classmodule extends Controller
     public function getInvitedCode()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "view")) {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->getInvitedCode($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->getInvitedCode($mahocphan);
             echo $result['mamoi'];
         }
     }
@@ -144,8 +146,8 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->getSvList($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->getSvList($mahocphan);
             echo json_encode($result);
         }
     }
@@ -155,12 +157,12 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $mssv = $_POST['mssv'];
             $hoten = $_POST['hoten'];
             $password = $_POST['password'];
-            $result = $this->nhomModel->addSV($mssv, $hoten, $password);
-            $joinGroup = $this->nhomModel->join($manhom, $mssv);
+            $result = $this->hocphanModel->addSV($mssv, $hoten, $password);
+            $joinGroup = $this->hocphanModel->join($mahocphan, $mssv);
             echo $joinGroup;
         }
     }
@@ -169,9 +171,9 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $mssv = $_POST['mssv'];
-            $joinGroup = $this->nhomModel->join($manhom, $mssv);
+            $joinGroup = $this->hocphanModel->join($mahocphan, $mssv);
             echo ($joinGroup);
         }
     }
@@ -180,9 +182,9 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $mssv = $_POST['mssv'];
-            $result = $this->nhomModel->checkAcc($mssv, $manhom);
+            $result = $this->hocphanModel->checkAcc($mssv, $mahocphan);
             echo $result;
         }
     }
@@ -192,8 +194,8 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->getStudentByGroup($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->getStudentByGroup($mahocphan);
             //Khởi tạo đối tượng
             $excel = new PHPExcel();
             //Chọn trang cần ghi (là số từ 0->n)
@@ -284,8 +286,8 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
-            $result = $this->nhomModel->getGroupSize($manhom);
+            $mahocphan = $_POST['mahocphan'];
+            $result = $this->hocphanModel->getGroupSize($mahocphan);
             echo $result;
         }
     }
@@ -294,9 +296,9 @@ class Classmodule extends Controller
     {
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $manhom = $_POST['manhom'];
+            $mahocphan = $_POST['mahocphan'];
             $mssv = $_POST['manguoidung'];
-            $result = $this->nhomModel->kickUser($manhom, $mssv);
+            $result = $this->hocphanModel->kickUser($mahocphan, $mssv);
             echo $result;
         }
     }

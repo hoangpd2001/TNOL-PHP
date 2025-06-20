@@ -10,9 +10,7 @@ Dashmix.onLoad((() => class {
                 "ghi-chu": {
                     required: !0,
                 },
-                "mon-hoc": {
-                    required: !0,
-                },
+             
                 "nam-hoc": {
                     required: !0
                 },
@@ -27,9 +25,7 @@ Dashmix.onLoad((() => class {
                 "ghi-chu": {
                     required: "Vui lòng không để trống trường này",
                 },
-                "mon-hoc": {
-                    required: "Vui lòng chọn môn học",
-                },
+            
                 "nam-hoc": {
                     required: "Vui lòng chọn năm học",
                 },
@@ -58,6 +54,7 @@ $(document).ready(function () {
     let mode = 1;
 
     function loadDataGroup(hienthi) {
+        console.log("load")
         $.ajax({
             type: "post",
             url: "./module/loadData",
@@ -66,6 +63,7 @@ $(document).ready(function () {
             },
             dataType: "json",
             success: function (response) {
+                console.log(response)
                 showGroup(response);
                 groups = response;
             }
@@ -87,7 +85,7 @@ $(document).ready(function () {
                 class="fa fa-rotate-left"></i></button>`
                 html += `<div>
                     <div class="heading-group d-flex align-items-center">
-                        <h2 class="content-heading pb-0" id="${d++}">${"<span class='mamonhoc'>" + item.mamonhoc + "</span>" + " - " + "<span class='tenmonhoc'>" + item.tenmonhoc + "</span>" + " - NH" + "<span class='namhoc'>" + item.namhoc + "</span>" + " - HK" + "<span class='hocky'>" + item.hocky + "</span>"}</h2>
+                        <h2 class="content-heading pb-0" id="${d++}">${ "<span class='id'>" + item.giangvien +"-"+"<span class='hoten'>" + item.hoten +" - NH" + "<span class='namhoc'>" + item.namhoc + "</span>" + " - HK" + "<span class='hocky'>" + item.hocky + "</span>"}</h2>
                         ${htmlbtnhide}
                     </div>
                     <div class="row">`;
@@ -147,17 +145,6 @@ $(document).ready(function () {
     }
 
 
-    $.get(
-        "./subject/getSubjectAssignment",
-        function (data) {
-            let html = "<option></option>";
-            data.forEach((item) => {
-                html += `<option value="${item.mamonhoc}">${item.mamonhoc + " - " + item.tenmonhoc}</option>`;
-            });
-            $("#mon-hoc").html(html);
-        },
-        "json"
-    );
 
     function renderListYear() {
         let html = "<option></option>";
@@ -182,7 +169,6 @@ $(document).ready(function () {
                 data: {
                     tennhom: $("#ten-nhom").val(),
                     ghichu: $("#ghi-chu").val(),
-                    monhoc: $("#mon-hoc").val(),
                     namhoc: $("#nam-hoc").val(),
                     hocky: $("#hoc-ky").val()
                 },
@@ -346,7 +332,6 @@ $(document).ready(function () {
             success: function (response) {
                 $("#ten-nhom").val(response.tennhom),
                 $("#ghi-chu").val(response.ghichu),
-                $("#mon-hoc").val(response.mamonhoc).trigger("change"),
                 $("#nam-hoc").val(response.namhoc).trigger("change"),
                 $("#hoc-ky").val(response.hocky).trigger("change")
             }
@@ -363,7 +348,7 @@ $(document).ready(function () {
                     manhom: $(this).data("id"),
                     tennhom: $("#ten-nhom").val(),
                     ghichu: $("#ghi-chu").val(),
-                    monhoc: $("#mon-hoc").val(),
+                   
                     namhoc: $("#nam-hoc").val(),
                     hocky: $("#hoc-ky").val()
                 },
@@ -391,7 +376,7 @@ $(document).ready(function () {
     $("#modal-add-group").on('hidden.bs.modal', function () {
         $("#ten-nhom").val(""),
             $("#ghi-chu").val(""),
-            $("#mon-hoc").val("").trigger("change"),
+          
             $("#nam-hoc").val("").trigger("change"),
             $("#hoc-ky").val("").trigger("change")
     });

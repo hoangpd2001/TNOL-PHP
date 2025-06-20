@@ -2,7 +2,7 @@
 class NguoiDungModel extends DB
 {
 
-    public function create($id, $email, $fullname, $password, $ngaysinh, $gioitinh, $role, $trangthai)
+    public function create($id, $email, $fullname, $password, $ngaysinh, $gioitinh, $role, $trangthai, $malop = null)
     {
         $password = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO `nguoidung`(`id`, `email`,`hoten`, `gioitinh`,`ngaysinh`,`matkhau`,`trangthai`, `manhomquyen`) VALUES ('$id','$email','$fullname','$gioitinh','$ngaysinh','$password',$trangthai, $role)";
@@ -11,6 +11,8 @@ class NguoiDungModel extends DB
         if (!$result) {
             $check = false;
         }
+        $sql = "INSERT INTO `sinhvien`(`id`, `malop`) VALUES ('$id','$malop')";
+        mysqli_query($this->con, $sql);
         return $check;
     }
 
@@ -66,7 +68,16 @@ class NguoiDungModel extends DB
         return $check;
     }
 
-
+    public function getAllTeacherFaculty($makhoa)
+    {
+        $sql = "SELECT * FROM `nguoidung`, giangvien WHERE giangvien.magiangvien = nguoidung.id and giangvien.`makhoa` = '$makhoa' and manhomquyen = 10";
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
     public function getAll()
     {
         $sql = "SELECT nguoidung.*, nhomquyen.`tennhomquyen`
@@ -221,26 +232,45 @@ class NguoiDungModel extends DB
         $result = mysqli_query($this->con, $sql);
         return $result;
     }
-
-    function addFile($data, $pass)
+    function addFile($data, $pass, $malop)
     {
-        $check = true;
+        // Bật chế độ throw exception khi có lỗi
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+        $ok = 0;
+        $fa = 0;
+
         foreach ($data as $user) {
-            $fullname = $user['fullname'];
-            $email = $user['email'];
-            $mssv = $user['mssv'];
-            $password = password_hash($pass, PASSWORD_DEFAULT);
-            $trangthai = $user['trangthai'];
-            $nhomquyen = $user['nhomquyen'];
-            $sql = "INSERT INTO `nguoidung`(`id`,`email`, `hoten`, `matkhau`, `trangthai`, `manhomquyen`) VALUES ('$mssv','$email','$fullname','$password','$trangthai','$nhomquyen')";
-            $result = mysqli_query($this->con, $sql);
-            if ($result) {
-            } else {
-                $check = false;
+            try {
+                $fullname = $user['fullname'];
+                $email = $user['email'];
+                $mssv = $user['mssv'];
+                $gioitinh = $user['gioitinh'];
+                $ngaysinh = $user['ngaysinh'];
+                $password = password_hash($pass, PASSWORD_DEFAULT);
+                $trangthai = $user['trangthai'];
+                $nhomquyen = $user['nhomquyen'];
+
+                // Thực hiện INSERT vào bảng nguoidung
+                $sql1 = "INSERT INTO `nguoidung`(`id`, `email`, `hoten`, ngaysinh, gioitinh, `matkhau`, `trangthai`, `manhomquyen`)
+                         VALUES ('$mssv','$email','$fullname','$ngaysinh','$gioitinh','$password','$trangthai','$nhomquyen')";
+                mysqli_query($this->con, $sql1);
+                // INSERT tiếp vào bảng sinhvien
+                $sql2 = "INSERT INTO `sinhvien`(`id`, `malop`) VALUES ('$mssv','$malop')";
+                mysqli_query($this->con, $sql2);
+                mysqli_commit($this->con);
+                $ok++;
+            } catch (mysqli_sql_exception $e) {
+                // Không cho in lỗi ra trình duyệt
+                // Ghi log nếu muốn
+                // error_log("Lỗi với MSSV $mssv: " . $e->getMessage());
+                $fa++;
             }
         }
-        return $check;
+
+        return "Thêm thành công $ok sinh viên, thất bại $fa sinh viên";
     }
+
 
     function addFileGroup($data, $pass, $group)
     {
@@ -288,18 +318,45 @@ class NguoiDungModel extends DB
         return $valid;
     }
 
-    public function getQuery($filter, $input, $args)
+    public function getQuery($filter = [], $input = '')
     {
-        $query = "SELECT ND.*, NQ.tennhomquyen FROM nguoidung ND, nhomquyen NQ WHERE ND.manhomquyen = NQ.manhomquyen";
-        if (isset($filter['role'])) {
-            $query .= " AND ND.manhomquyen = " . $filter['role'];
+        $query = "
+            SELECT ND.*, NQ.tennhomquyen, SV.malop, L.tenlop
+            FROM nguoidung ND
+            JOIN nhomquyen NQ ON ND.manhomquyen = NQ.manhomquyen
+            LEFT JOIN sinhvien SV ON ND.id = SV.id
+            LEFT JOIN lop L ON SV.malop = L.malop
+            WHERE ND.manhomquyen = 11
+        ";
+
+        if (isset($filter['malop'])) {
+            $query .= " AND SV.malop = '" . mysqli_real_escape_string($this->con, $filter['malop']) . "'";
         }
-        if ($input) {
-            $query = $query . " AND (ND.hoten LIKE N'%${input}%' OR ND.id LIKE '%${input}%')";
+
+        if (isset($filter['manganh'])) {
+            $query .= " AND L.manganh = '" . mysqli_real_escape_string($this->con, $filter['manganh']) . "'";
         }
-        $query = $query . " ORDER BY id ASC";
+
+        if (isset($filter['makhoa'])) {
+            $query .= " AND L.manganh IN (
+                SELECT manganh FROM nganh WHERE makhoa = '" . mysqli_real_escape_string($this->con, $filter['makhoa']) . "'
+            )";
+        }
+
+        if (isset($filter['trangthai'])) {
+            $query .= " AND ND.trangthai = " . intval($filter['trangthai']);
+        }
+
+        if (!empty($input)) {
+            $escapedInput = mysqli_real_escape_string($this->con, $input);
+            $query .= " AND (ND.hoten LIKE N'%$escapedInput%' OR ND.id LIKE '%$escapedInput%')";
+        }
+
+        $query .= " ORDER BY ND.id ASC";
+
         return $query;
     }
+
 
     public function checkUser($mssv, $email)
     {
@@ -311,6 +368,18 @@ class NguoiDungModel extends DB
         }
         return $rows;
     }
+    public function checkAdmin($mssv)
+    {
+        $sql = "SELECT `manhomquyen` FROM `nguoidung` WHERE `id` = '$mssv'";
+        $result = mysqli_query($this->con, $sql);
+
+        if ($result && $row = mysqli_fetch_assoc($result)) {
+            return $row['manhomquyen'] == 1;
+        }
+
+        return false;
+    }
+
 
     public function checkEmail($id)
     {

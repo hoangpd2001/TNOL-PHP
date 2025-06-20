@@ -1,6 +1,8 @@
 $(document).ready(function () {
   let questions = [];
   const made = $("#dethicontent").data("id");
+  const loaigiao = $("#dethicontent").data("loaigiao");
+  const manguongiao =$("#dethicontent").data("manguongiao");
   const dethi = "dethi" + made;
   const cautraloi = "cautraloi" + made;
   function getQuestion() {
@@ -20,6 +22,7 @@ $(document).ready(function () {
 
   function showListQuestion(questions, answers) {
     let html = ``;
+    console.log("data",dethidata);
     console.log(questions);
     console.log(answers);
     questions.forEach((question, index) => {
@@ -138,16 +141,22 @@ $(document).ready(function () {
         listCauTraLoi: JSON.parse(localStorage.getItem(cautraloi)),
         thoigianlambai: thoigian,
         made: dethiCheck,
+        loaigiao: loaigiao,
+        manguongiao: manguongiao,
       },
       success: function (response) {
         localStorage.removeItem(cautraloi);
         localStorage.removeItem(dethi);
-        location.href = `./test/start/${made}`;
+        location.href = `./test/start/${made}?loainhom=${
+          loaigiao == 1 ? "hocphan" : "nhom"
+        }&manhom=${manguongiao}"`;
       },
       error: function (response) {
         localStorage.removeItem(cautraloi);
         localStorage.removeItem(dethi);
-        location.href = `./test/start/${made}`;
+        location.href = `./test/start/${made}?loainhom=${
+         loaigiao == 1 ? "hocphan" : "nhom"
+        }&manhom=${manguongiao}"`;
       },
     });
   }
@@ -175,19 +184,29 @@ $(document).ready(function () {
 
   function getTimeTest() {
     let dethi = $("#dethicontent").data("id");
+    console.log("duocgoi")
+    console.log(   "dethi:", dethi);
+      console.log("loaigiao:", loaigiao);
+      console.log("manguongiao:", manguongiao)
     $.ajax({
       type: "post",
       url: "./test/getTimeTest",
       data: {
         dethi: dethi,
+        loaigiao: loaigiao,
+        manguongiao: manguongiao,
       },
       success: function (response) {
         endTime = new Date(response).getTime();
+        console.log("end time")
+        console.log(endTime)
         let curTime = new Date().getTime();
         if (curTime > endTime) {
           localStorage.removeItem(cautraloi);
           localStorage.removeItem(dethi);
-          location.href = `./test/start/${made}`;
+          location.href = `./test/start/${made}?loainhom=${
+            loaigiao == 1 ? "hocphan" : "nhom"
+          }&manhom=${manguongiao}"`;
         } else {
           $.ajax({
             type: "post",

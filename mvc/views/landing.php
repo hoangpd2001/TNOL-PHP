@@ -9,7 +9,7 @@
                 <div class="space-x-1 d-flex align-items-center space-x-2 animated zoomInRight">
                     <a class="link-fx fw-bold" href="home">
                         <i class="fa fa-fire text-primary"></i>
-                        <span class="fs-4 text-dual">SGU </span><span class="fs-4 text-primary">Test</span>
+                        <span class="fs-4 text-dual">TNOL </span><span class="fs-4 text-primary">Hactech</span>
                     </a>
                 </div>
                 <div class="space-x-1">
@@ -351,7 +351,7 @@
                         data-slides-to-show="1" data-autoplay="false">
                         <div class="py-3">
                             <blockquote class="blockquote">
-                                <p class="px-7 fs-5 text-justify mb-5">Sgu Test là một hệ thống tạo đề thi trắc nghiệm rất tiện
+                                <p class="px-7 fs-5 text-justify mb-5">TNOL Hactech là một hệ thống tạo đề thi trắc nghiệm rất tiện
                                     lợi và hiệu
                                     quả cho giáo
                                     viên và học sinh. Giao diện trực quan và dễ sử dụng, tính năng tùy chỉnh linh hoạt,
@@ -370,12 +370,12 @@
                         </div>
                         <div class="py-3">
                             <blockquote class="blockquote">
-                                <p class="px-7 fs-5 text-justify mb-5">Sử dụng nhiều công cụ trong việc dạy học, nhưng SGU Test là công cụ mình yêu thích
+                                <p class="px-7 fs-5 text-justify mb-5">Sử dụng nhiều công cụ trong việc dạy học, nhưng TNOL Hactech là công cụ mình yêu thích
                                     nhất. Việc thiết kế bài kiểm tra và quản lí, đánh giá kết quả của học sinh chưa bao
                                     giờ đơn giản và hiệu quả đến vậy. Đội ngũ luôn lắng nghe góp ý để đem lại trải
-                                    nghiệm tốt nhất cho người dùng. Chúc SGU Test ngày càng phát triển và nhiều giáo
+                                    nghiệm tốt nhất cho người dùng. Chúc TNOL Hactech ngày càng phát triển và nhiều giáo
                                     viên
-                                    sẽ biết đến SGU Test hơn.</p>
+                                    sẽ biết đến TNOL Hactech hơn.</p>
                             </blockquote>
                             <div class="d-flex align-items-center justify-content-center">
                                 <img class="img-avatar me-4" src="./public/media/avatars/avatar0.jpg" alt="">
@@ -387,7 +387,7 @@
                         </div>
                         <div class="py-3">
                             <blockquote class="blockquote">
-                                <p class="px-7 fs-5 text-justify mb-5">Ứng dụng SGU Test có giao diện trực quan, dễ dùng và có đầy đủ các tính năng phục vụ
+                                <p class="px-7 fs-5 text-justify mb-5">Ứng dụng TNOL Hactech có giao diện trực quan, dễ dùng và có đầy đủ các tính năng phục vụ
                                     cho dạy và học thời đại 4.0. Ngoài ra ứng dụng luôn được cập nhật và đổi mới từng
                                     ngày theo nhu cầu của các thầy cô giáo và học sinh.</p>
                             </blockquote>
@@ -401,7 +401,7 @@
                         </div>
                         <div class="py-3">
                             <blockquote class="blockquote">
-                                <p class="px-7 fs-5 text-justify mb-5">Nhờ có SGU Test mà tôi đã tiết kiệm được rất nhiều thời gian trong việc quản lý lớp
+                                <p class="px-7 fs-5 text-justify mb-5">Nhờ có TNOL Hactech mà tôi đã tiết kiệm được rất nhiều thời gian trong việc quản lý lớp
                                     học của mình. Việc soạn bài, tạo các đề thi để cho học sinh thi chưa bao giờ đơn
                                     giản đến thế. Đặc biệt các bạn tư vấn và hỗ trợ rất nhiệt tình khi mình gặp vướng
                                     mắc.</p>
@@ -416,7 +416,7 @@
                         </div>
                         <div class="py-3">
                             <blockquote class="blockquote">
-                                <p class="px-7 fs-5 text-justify mb-5">Nhờ có SGU Test mà tôi đã tiết kiệm được rất nhiều thời gian trong việc quản lý lớp
+                                <p class="px-7 fs-5 text-justify mb-5">Nhờ có TNOL Hactech mà tôi đã tiết kiệm được rất nhiều thời gian trong việc quản lý lớp
                                     học của mình. Việc soạn bài, tạo các đề thi để cho học sinh thi chưa bao giờ đơn
                                     giản đến thế. Đặc biệt các bạn tư vấn và hỗ trợ rất nhiệt tình khi mình gặp vướng
                                     mắc.</p>
@@ -488,7 +488,7 @@
                 <!-- Footer Copyright -->
                 <div class="row fs-sm pt-4">
                     <div class="col-md-6 offset-md-3 text-center">
-                        Copyright © 2023 OnTestVN. All rights reserved.
+                        Copyright © 2023 HactechVN. All rights reserved.
                     </div>
                 </div>
                 <!-- END Footer Copyright -->

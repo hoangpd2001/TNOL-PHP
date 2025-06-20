@@ -1,11 +1,11 @@
 <?php
 class NganhModel extends DB
 {
-    public function create($manganh, $tennganh, $makhoa, $trangthai)
+    public function create($tennganh, $makhoa, $trangthai)
     {
         $valid = true;
-        $sql = "INSERT INTO `nganh`(`manganh`, `tennganh`, `makhoa`, `trangthai`) 
-                VALUES ('$manganh', '$tennganh', '$makhoa', 1)";
+        $sql = "INSERT INTO `nganh`( `tennganh`, `makhoa`, `trangthai`) 
+                VALUES ( '$tennganh', '$makhoa', '$trangthai')";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
         return $valid;

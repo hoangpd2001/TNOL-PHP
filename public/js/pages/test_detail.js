@@ -1,5 +1,6 @@
 function showData(data) {
   let html = "";
+  console.log(data);
   data.forEach((Element) => {
     var totalSeconds = Element["thoigianlambai"] || 0;
     var hours = Math.floor(totalSeconds / 3600);
@@ -23,6 +24,9 @@ function showData(data) {
                 <span class="fw-normal fs-sm text-muted">${
                   Element["email"]
                 }</span>
+                 <span class="fw-normal fs-sm text-muted">${
+                   Element["tennguongiao"]
+                 }</span>
             </div>
         </td>
         <td class="text-center">${Element["diemthi"] || "(Chưa nộp bài)"}</td>
@@ -49,7 +53,11 @@ function showData(data) {
   $('[data-bs-toggle="tooltip"]').tooltip();
 }
 
-const made = document.getElementById("chitietdethi").dataset.id;
+const chitiet = document.getElementById("chitietdethi");
+const made = chitiet.dataset.id;
+const loaigiao = chitiet.dataset.loaigiao;
+const manguongiao = chitiet.dataset.manguongiao;
+
 
 // Lấy danh sách mã nhóm
 const listGroupID = [];
@@ -60,17 +68,21 @@ document.querySelectorAll(".filtered-by-group").forEach(function (element) {
 let currentGroupID = listGroupID[0];
 
 $(document).ready(function () {
+
   $("[data-bs-target='#modal-cau-hoi']").click(function (e) {
     e.preventDefault();
     let made = $(this).data("id");
+    console.log("duoc goi");
+    console.log(made);
     $.ajax({
       type: "post",
-      url: "./test/getQuestionOfTestManual",
+      url: "./test/getQuestionsOfTestManual",
       data: {
         made: made,
       },
       dataType: "json",
       success: function (response) {
+        console.log("response", response);
         showListQuestion(response);
       },
     });
@@ -381,17 +393,23 @@ $(".filtered-by-static").click(function (e) {
   e.preventDefault();
   $(".filtered-by-static.active").removeClass("active");
   $(this).addClass("active");
+  $(".btn-filtered-by-static").text($(this).text());
   $(".chart-container").html('<canvas id="myChart"></canvas>');
   getStatictical();
 });
 
 function getStatictical() {
+  let selectedGroup = $(".filtered-by-static.active").data("id");
+  let manhom = selectedGroup === 0 ? listGroupID.slice(1) : selectedGroup;
+  console.log(manhom)
   $.ajax({
     type: "post",
     url: "./test/getStatictical",
+
     data: {
       made: made,
-      manhom: $(".filtered-by-static.active").data("id"),
+      loaigiao: loaigiao,
+      manhom: manhom,
     },
     dataType: "json",
     success: function (response) {
@@ -480,7 +498,9 @@ const mainPagePagination = new Pagination();
 mainPagePagination.option.controller = "test";
 mainPagePagination.option.model = "KetQuaModel";
 mainPagePagination.option.made = made;
+mainPagePagination.option.loaigiao = loaigiao;
+mainPagePagination.option.manguongiao = manguongiao;
 mainPagePagination.option.manhom = listGroupID.slice(1);
-mainPagePagination.option.limit = 10;
+mainPagePagination.option.limit = 500;
 mainPagePagination.option.filter = "present";
 mainPagePagination.getPagination(mainPagePagination.option, mainPagePagination.valuePage.curPage);

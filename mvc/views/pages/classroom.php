@@ -13,6 +13,15 @@
         <div class="block-content">
             <form action="#" method="POST" id="search-form" onsubmit="return false;">
                 <div class="row mb-3">
+                    <div class="col-xl-2 d-flex gap-2 align-items-center pb-2">
+                        <select class="js-select2 form-select" id="main-page-trangthai" name="main-page-trangthai"
+                            data-placeholder="Trạng thái" data-tab="1">
+                            <option value="">Tất cả</option>
+                            <option value="1">Hoạt động</option>
+                            <option value="0">Ngừng</option>
+                        </select>
+                    </div>
+
                     <div class="col-xl-3 d-flex gap-2 align-items-center pb-2">
                         <select class="js-select2 form-select" id="main-page-khoa" name="main-page-khoa"
                             data-placeholder="Chọn Khoa" data-tab="1">
@@ -49,7 +58,9 @@
                             <th class="text-center">Mã lớp</th>
                             <th>Tên lớp</th>
                             <th class="d-none d-sm-table-cell text-center">Số sinh viên</th>
-                            <th class="d-none d-sm-table-cell text-center">Khoa</th>
+                            <th class="d-none d-sm-table-cell text-center">Ngành học</th>
+                            <th class="d-none d-sm-table-cell text-center">Khóa học</th>
+                            <th class="d-none d-sm-table-cell text-center">Chủ nhiệm</th>
                             <th class="text-center col-header-action">Hành động</th>
                         </tr>
                     </thead>
@@ -110,13 +121,27 @@
                             <option></option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="tengiaovien" class="form-label d-block">Tên giáo viên </label>
+                        <select class="js-select2 form-select" id="tengiaovien" name="tengiaovien" style="width: 100%;"
+                            data-placeholder="Chọn giáo viên " data-tab="1">
+                            <option></option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center gap-5">
+                        <label for="status" class="form-label">Trạng thái</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="status">
+                            <label class="form-check-label" for="status"></label>
+                        </div>
+                    </div>
                 </form>
                 <div class="block-content block-content-full text-end bg-body">
                     <button type="button" class="btn btn-sm btn-alt-secondary me-1"
                         data-bs-dismiss="modal">Đóng</button>
                     <button type="button" class="btn btn-sm btn-primary add-classroom-element"
-                        id="add_class">Lưu</button>
-                    <button type="button" class="btn btn-sm btn-primary update-classroom-element" id="update_class"
+                        id="add_classroom">Lưu</button>
+                    <button type="button" class="btn btn-sm btn-primary update-classroom-element" id="update_classroom"
                         data-id="">Cập nhật</button>
                 </div>
             </div>

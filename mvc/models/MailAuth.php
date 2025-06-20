@@ -4,6 +4,8 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
+
+require 'vendor/autoload.php';
 require 'vendor/phpmailer/phpmailer/src/Exception.php';
 require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require 'vendor/phpmailer/phpmailer/src/SMTP.php';
@@ -16,17 +18,19 @@ class MailAuth extends DB
 
     public function __construct()
     {
+       // thư mục chứa file .env
         parent::__construct();
         $this->mail = new PHPMailer(true);
         $this->mail->SMTPDebug = SMTP::DEBUG_SERVER; // Enable verbose debug output
         $this->mail->isSMTP(); // gửi mail SMTP
-        $this->mail->Host = getenv('SMTP_HOST'); // SMTP server
         $this->mail->SMTPAuth = true;
-        $this->mail->Username = getenv('SMTP_USERNAME'); // SMTP username
-        $this->mail->Password = getenv('SMTP_PASSWORD'); // SMTP password
+        $this->mail->Host = $_ENV['SMTP_HOST'];
+        $this->mail->Username = $_ENV['SMTP_USERNAME'];
+        $this->mail->Password = $_ENV['SMTP_PASSWORD'];
+        $this->mail->Port = $_ENV['SMTP_PORT'];
+
         $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $this->mail->Port = getenv('SMTP_PORT'); // SMTP port
-        $this->mail->setFrom(getenv('SMTP_FROM'), getenv('SMTP_FROM_NAME'));
+        $this->mail->setFrom($_ENV['SMTP_FROM'], $_ENV['SMTP_FROM_NAME']);
     }
 
     public function sendOpt($email,$opt)

@@ -6,8 +6,7 @@ Dashmix.onLoad((() => class {
       rules: {
         "mssv": {
           required: !0,
-          digits: true,
-          minlength: 10
+        
         },
         "hoten": {
           required: !0,
@@ -20,8 +19,7 @@ Dashmix.onLoad((() => class {
       messages: {
         "mssv": {
           required: "Vui lòng nhập mã sinh viên của bạn",
-          digits: "Mã sinh viên phải là các ký tự số",
-          minlength: "Mã số sinh viên ít nhất 10 ký tự"
+
         },
         "hoten": {
           required: "Cung cấp đầy đủ họ tên",
@@ -174,19 +172,34 @@ $(document).ready(function () {
     if (tests.length != 0) {
       tests.forEach((test) => {
         html += `<div class="block block-rounded block-fx-pop mb-2">
-                <div class="block-content block-content-full border-start border-3 border-primary">
-                    <div class="d-md-flex justify-content-md-between align-items-md-center">
-                        <div class="p-1 p-md-2">
-                            <h3 class="h4 fw-bold mb-3">
-                                <a href="./test/detail/${test.made}" class="text-dark link-fx">${test.tende}</a>
-                            </h3>
-                            <p class="fs-sm text-muted mb-0">
-                                <i class="fa fa-clock me-1"></i> Diễn ra từ <span>${test.thoigianbatdau}</span> đến <span>${test.thoigianketthuc}</span>
-                            </p>
-                        </div>
-                    </div>
+        <div class="block-content block-content-full border-start border-3 border-primary">
+            <div class="d-md-flex justify-content-md-between align-items-md-center">
+                <div class="p-1 p-md-2">
+                    <h3 class="h4 fw-bold mb-3">
+                        <a href="./test/detail/${
+                          test.made
+                        }?loaigiao=0&manguongiao=${manhom}" class="text-dark link-fx">${
+                        test.tende
+                      }</a>
+                    </h3>
+                     <p class="fs-sm text-muted mb-0">
+                        <i class="fa fa-clock me-1"></i> Hình thức:  ${
+                          test.trangthai == -1 ? " Ôn luyện" : "Thi "
+                        }</span>
+                    </p>
+                    <p class="fs-sm text-muted mb-0">
+                        <i class="fa fa-clock me-1"></i> Diễn ra từ: <span style="color:red">${
+                          test.thoigianbatdau
+                        }</span> ${
+                          test.trangthai == -1
+                            ? `đến <span style="color:red">${test.thoigianketthuc}</span>`
+                            : ""
+                        }
+                    </p>
                 </div>
-            </div>`;
+            </div>
+        </div>
+    </div>`;
       });
     } else {
       html += `<p class="text-center">Chưa có đề thi...</p>`;

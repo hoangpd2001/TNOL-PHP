@@ -6,19 +6,13 @@ Dashmix.onLoad(() =>
       Dashmix.helpers("jq-validation"),
         jQuery(".form-add-classroom").validate({
           rules: {
-            malop: {
-              required: !0,
-              digits: true,
-            },
+          
             "tenkhoa": {
               required: !0,
             },
           },
           messages: {
-            malop: {
-              required: "Vui lòng nhập mã môn học",
-              digits: "Mã môn học phải là các ký tự số",
-            },
+          
             "tenkhoa": {
               required: "Vui lòng cung cấp tên môn học",
             },
@@ -34,16 +28,13 @@ Dashmix.onLoad(() =>
 
 
 function loadSelect2() {
-  $(".js-select2").each(function () {
-    const id = $(this).attr("id");
-    $(this).select2({
-      dropdownParent: $("#modal-add-classroom"), // Fix lỗi nhập trong modal
-      width: "100%",
-      placeholder: $(this).data("placeholder") || "", // Lấy từ attribute nếu có
-      minimumResultsForSearch: 0,
-    });
+  // Chỉ áp dụng Select2 cho phần trong modal
+  $("#modal-add-classroom select").select2({
+    dropdownParent: $("#modal-add-classroom"),
+    width: "100%",
   });
 }
+
 
 let facultyMap = {};
 $.get(
@@ -77,32 +68,42 @@ $.get(
   },
   "json"
 );
-
 $("#main-page-khoa").on("change", function () {
   let makhoa = $(this).val();
-  // Reset filter
-  //
   let id = $(this).data("tab");
-  let html = "<option></option>";
+
+  // Reset ngành và giáo viên tương ứng với khoa
+  let nganhHtml = "<option></option>";
+  let giaoVienHtml = "<option></option>";
+
   $.ajax({
     type: "post",
     url: "./major/getAllFaculty",
-    data: {
-      makhoa: makhoa,
-    },
+    data: { makhoa: makhoa },
     dataType: "json",
     success: function (data) {
       data.forEach((item) => {
-        html += `<option value="${item.manganh}">${item.tennganh}</option>`;
+        nganhHtml += `<option value="${item.manganh}">${item.tennganh}</option>`;
       });
-      $(`#main-page-nganh[data-tab="${id}"]`).html(html);
+      $(`#main-page-nganh[data-tab="${id}"]`).html(nganhHtml);
     },
   });
 
-  // Reset filter
-  $("#main-page-makhoa").val(0).trigger("change");
-  // Ajax call + pagination
-  mainPagePagination.option.filter = {};
+  $.ajax({
+    type: "post",
+    url: "./teacher/getAllFaculty",
+    data: { makhoa: makhoa },
+    dataType: "json",
+    success: function (data) {
+      data.forEach((item) => {
+        giaoVienHtml += `<option value="${item.id}">${item.hoten}</option>`;
+      });
+      $(`#main-page-giaovien[data-tab="${id}"]`).html(giaoVienHtml);
+    },
+  });
+
+  // Cập nhật filter và gọi phân trang
+  mainPagePagination.option.filter = mainPagePagination.option.filter || {};
   mainPagePagination.option.filter.makhoa = makhoa;
   mainPagePagination.getPagination(
     mainPagePagination.option,
@@ -110,22 +111,31 @@ $("#main-page-khoa").on("change", function () {
   );
 });
 $("#main-page-nganh").on("change", function () {
-  const manganh = $(this).val();
-  mainPagePagination.option.filter.manganh = manganh;
-  mainPagePagination.getPagination(
-    mainPagePagination.option,
-    mainPagePagination.valuePage.curPage
-  );
+  updateMainPageFilter("manganh", $(this).val());
+});
+
+$("#main-page-trangthai").on("change", function () {
+  updateMainPageFilter("trangthai", $(this).val());
 });
 
 $("#main-page-khoahoc").on("change", function () {
-  const makhoahoc = $(this).val();
-  mainPagePagination.option.filter.makhoahoc = makhoahoc;
+  updateMainPageFilter("makhoahoc", $(this).val());
+});
+function updateMainPageFilter(field, value) {
+  mainPagePagination.option.filter = mainPagePagination.option.filter || {};
+
+  if (value === "") {
+    delete mainPagePagination.option.filter[field];
+  } else {
+    mainPagePagination.option.filter[field] = value;
+  }
+
   mainPagePagination.getPagination(
     mainPagePagination.option,
     mainPagePagination.valuePage.curPage
   );
-});
+}
+
 function showData(classroom) {
   let html = "";
   console.log(classroom);
@@ -135,8 +145,9 @@ function showData(classroom) {
               <td class="text-center fs-sm"><strong>${classroom.malop}</strong></td>
               <td>${classroom.tenlop}</td>
               <td class="d-none d-sm-table-cell text-center fs-sm">${classroom.tongsinhvien}</td>
-              
+              <td class="d-none d-sm-table-cell text-center fs-sm">${classroom.tennganh}</td>
              <td class="d-none d-sm-table-cell text-center fs-sm">${tenkhoahoc}</td>
+             <td class="d-none d-sm-table-cell text-center fs-sm">${classroom.hoten}</td>
               <td class="text-center col-action">
                   <a data-role="chuong" data-action="view" class="btn btn-sm btn-alt-secondary classroom-info" data-bs-toggle="modal" data-bs-target="#modal-student" href="javascript:void(0)"
                       data-bs-toggle="tooltip" aria-label="Thêm chương" data-bs-original-title="Chi tiết chương" data-id="${classroom.malop}">
@@ -172,7 +183,25 @@ function loadFaculties() {
     );
   });
 }
-
+function loadTeacher() {
+  console.log("loadTeacher");
+  return new Promise((resolve) => {
+    $.get(
+      "./teacher/getData",
+      function (data) {
+        console.log(data);
+        console.log("loadTeacher");
+        let html = "<option></option>";
+        data.forEach((item) => {
+          html += `<option value="${item.id}">${item.id} -  ${item.hoten} - ${item.tenkhoa}</option>`;
+        });
+        $("#tengiaovien").html(html);
+        resolve();
+      },
+      "json"
+    );
+  });
+}
 function loadMajorsByFaculty(makhoa) {
   return new Promise((resolve, reject) => {
     if (!makhoa) {
@@ -198,8 +227,11 @@ function loadMajorsByFaculty(makhoa) {
         reject();
       },
     });
+   
   });
 }
+
+
 
 
 function loadCourses() {
@@ -248,73 +280,62 @@ $(document).ready(function () {
         console.error("Lỗi khi tải danh sách ngành theo khoa.");
       },
     });
+
   });
 
   $("[data-bs-target='#modal-add-classroom']").click(function (e) {
     e.preventDefault();
+   
 
     // Reset form & trạng thái
     $(".update-classroom-element").hide();
     $(".add-classroom-element").show();
     $(".form-add-classroom")[0].reset();
+    $("#status").prop("checked", true);
     $("#tenkhoa").empty().append("<option></option>");
     $("#tennganh").empty().append("<option></option>");
     $("#tenkhoahoc").empty().append("<option></option>");
-
+    $("#tengiaovien").empty().append("<option></option>");
     // Gọi các hàm load dữ liệu
     loadFaculties(); // load khoa
+    loadTeacher(); // load giáo viên
     loadCourses(); // load khóa học
   });
 
   // Khi modal đã hiển thị hoàn toàn thì khởi tạo Select2
   $("#modal-add-classroom").on("shown.bs.modal", function () {
     loadSelect2();
+  //  
   });
 
-  function checkTonTai(malop) {
-    let check = true;
-    $.ajax({
-      type: "post",
-      url: "./classroom/checkclassroom",
-      data: {
-        malop: malop,
-      },
-      async: false,
-      dataType: "json",
-      success: function (response) {
-        if (response.length !== 0) {
-          Dashmix.helpers("jq-notify", {
-            type: "danger",
-            icon: "fa fa-times me-1",
-            message: `Môn học đã tồn tại!`,
-          });
-          check = false;
-        }
-      },
-    });
-    return check;
-  }
+
 
   $("#add_classroom").on("click", function () {
-    let malop = $("#malop").val();
-    if ($(".form-add-classroom").valid() && checkTonTai(malop)) {
+   console.log("add_classroom");
+   let data = {
+     tenlop: $("#tenlop").val(),
+     manganh: $("#tennganh").val(),
+     makhoahoc: $("#tenkhoahoc").val(),
+     magiaovien: $("#tengiaovien").val(),
+   };
+   console.log(data);
+    if ($(".form-add-classroom").valid()) {
       $.ajax({
         type: "post",
         url: "./classroom/add",
         data: {
-          malop: malop,
-          tenmon: $("#tenlop").val(),
-          sotinchi: $("#sotinchi").val(),
-          sotietlythuyet: $("#sotiet_lt").val(),
-          sotietthuchanh: $("#sotiet_th").val(),
-          makhoa: $("#tenkhoa").val(),
+          tenlop: $("#tenlop").val(),
+          manganh: $("#tennganh").val(),
+          makhoahoc: $("#tenkhoahoc").val(),
+          magiaovien: $("#tengiaovien").val(),
         },
         success: function (response) {
+        
           if (response) {
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Thêm môn học thành công!",
+              message: "Thêm lớp học thành công!",
             });
             $("#modal-add-classroom").modal("hide");
             mainPagePagination.getPagination(
@@ -325,7 +346,7 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Thêm môn học không thành công!",
+              message: "Thêm lớp học không thành công!",
             });
           }
         },
@@ -340,7 +361,7 @@ $(document).ready(function () {
     $("#tenkhoa").empty().append("<option></option>");
     $("#tennganh").empty().append("<option></option>");
     $("#tenkhoahoc").empty().append("<option></option>");
-
+    $("#tengiaovien").empty().append("<option></option>");
     let malop = $(this).data("id");
 
     // 1. Lấy chi tiết lớp
@@ -352,19 +373,21 @@ $(document).ready(function () {
     });
 
     if (response) {
-      $("#malop").val(response.malop);
+      console.log("response", response);
+      console.log(response);
       $("#tenlop").val(response.tenlop);
-      $("#sotinchi").val(response.sotinchi);
-      $("#sotiet_lt").val(response.sotietlythuyet);
-      $("#sotiet_th").val(response.sotietthuchanh);
+      $("#status").prop("checked", response.trangthai == 1);
 
       // 2. Load danh sách khóa học và chọn đúng
       await loadCourses();
       $("#tenkhoahoc").val(response.makhoahoc);
-
+      await loadTeacher();
+      $("#tengiaovien").val(response.magiaovien);
       // 3. Load danh sách khoa và chọn đúng
       await loadFaculties();
       $("#tenkhoa").val(response.makhoa);
+      
+
 
       // 4. Load danh sách ngành theo khoa vừa chọn và gán đúng ngành
       await loadMajorsByFaculty(response.makhoa);
@@ -380,9 +403,7 @@ $(document).ready(function () {
   $("#modal-add-classroom").on("hidden.bs.modal", function () {
     $("#malop").val(""),
       $("#tenlop").val(""),
-      $("#sotinchi").val(""),
-      $("#sotiet_lt").val(""),
-      $("#sotiet_th").val(""),
+
       $("#tenkhoa").val(""),
       $("#update_classroom").data("id", "");
   });
@@ -395,13 +416,13 @@ $(document).ready(function () {
         type: "post",
         url: "./classroom/update",
         data: {
-          id: malop,
-          malop: $("#malop").val(),
-          tenmon: $("#tenlop").val(),
-          sotinchi: $("#sotinchi").val(),
-          makhoa: $("#tenkhoa").val(),
-          sotietlythuyet: $("#sotiet_lt").val(),
-          sotietthuchanh: $("#sotiet_th").val(),
+    
+          malop: malop,
+          tenlop: $("#tenlop").val(),
+          manganh: $("#tennganh").val(),
+          makhoahoc: $("#tenkhoahoc").val(),
+          magiaovien: $("#tengiaovien").val(),
+          trangthai: $("#status").is(":checked") ? 1 : 0,
         },
         success: function (response) {
           if (response) {
@@ -409,7 +430,7 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Cập nhật môn học thành công!",
+              message: "Cập nhật lớp học thành công!",
             });
             mainPagePagination.getPagination(
               mainPagePagination.option,
@@ -419,7 +440,7 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Cập nhật môn học không thành công!",
+              message: "Cập nhật lớp học không thành công!",
             });
           }
         },

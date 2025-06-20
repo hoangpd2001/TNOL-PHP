@@ -44,45 +44,87 @@ class Question extends Controller
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("cauhoi", "create")) {
             require_once 'vendor/autoload.php';
             $filename = $_FILES["fileToUpload"]["tmp_name"];
-            $objReader = WordIOFactory::createReader('Word2007');
+            $objReader = \PhpOffice\PhpWord\IOFactory::createReader('Word2007');
             $phpWord = $objReader->load($filename);
-            $text = '';
-            // Lấy kí tự từng đoạn
+
             function getWordText($element)
             {
                 $result = '';
-                if ($element instanceof AbstractContainer) {
-                    foreach ($element->getElements() as $element) {
-                        $result .= getWordText($element);
+                if ($element instanceof \PhpOffice\PhpWord\Element\AbstractContainer) {
+                    foreach ($element->getElements() as $child) {
+                        $result .= getWordText($child);
                     }
-                } elseif ($element instanceof Text) {
+                } elseif ($element instanceof \PhpOffice\PhpWord\Element\Text) {
                     $result .= $element->getText();
                 }
                 return $result;
             }
 
+            $text = '';
+            $answerMap = [];
+
             foreach ($phpWord->getSections() as $section) {
                 foreach ($section->getElements() as $element) {
-                    $text .= trim(getWordText($element));
-                    $text .= "\\n";
+
+                    // Nếu là bảng chứa đáp án
+                    if ($element instanceof \PhpOffice\PhpWord\Element\Table) {
+                        foreach ($element->getRows() as $row) {
+                            $cells = $row->getCells();
+                            for ($i = 0; $i < count($cells) - 1; $i += 2) {
+                                $qnum = trim(getWordText($cells[$i]));
+                                $letter = trim(getWordText($cells[$i + 1]));
+                                if (is_numeric($qnum) && preg_match('/^[A-Da-d]$/', $letter)) {
+                                    $answerMap[(int)$qnum] = strtoupper($letter);
+                                }
+                            }
+                        }
+                    } else {
+                        // Các phần còn lại (câu hỏi)
+                        $text .= trim(getWordText($element)) . "\n";
+                    }
                 }
             }
 
-            $text = rtrim($text, "\\n");
-            substr($text, -1);
-            $questions = explode("\\n\\n", $text);
-            $arrques = array();
-            for ($i = 0; $i < count($questions); $i++) {
-                $data = explode("\\n", $questions[$i]);
-                $arrques[$i]['level'] = substr($data[0], 1, 1);
-                $arrques[$i]['question'] = substr(trim($data[0]), 4);
-                $arrques[$i]['answer'] = ord(trim(substr($data[count($data) - 1], 8))) - 65 + 1;
-                $arrques[$i]['option'] = array();
-                for ($j = 1; $j < count($data) - 1; $j++) {
-                    $arrques[$i]['option'][] = trim(substr($data[$j], 3));
+            // Tách từng câu hỏi
+            preg_match_all('/Câu\s*(\d+)\.\s*(.*?)((?=Câu\s*\d+\.|$))/s', $text, $questionMatches, PREG_SET_ORDER);
+
+            $result = [];
+            foreach ($questionMatches as $qMatch) {
+                $qnum = (int)$qMatch[1];
+                $content = trim($qMatch[2] . $qMatch[3]);
+
+                // Tách dòng
+                $lines = preg_split('/\r\n|\n|\r/', $content);
+                $questionLines = [];
+                $optionText = "";
+
+                foreach ($lines as $line) {
+                    if (preg_match('/^\s*[A-D]\./', $line)) {
+                        $optionText .= " " . trim($line);
+                    } else {
+                        $questionLines[] = trim($line);
+                    }
                 }
+
+                $questionText = implode(" ", $questionLines);
+
+                // Tách các lựa chọn A. B. C. D.
+                preg_match_all('/([A-D])\.\s*(.*?)(?=\s+[A-D]\.|$)/s', $optionText, $optionMatches);
+                $options = array_map('trim', $optionMatches[2]);
+
+                // Tìm đáp án đúng
+                $correctLetter = isset($answerMap[$qnum]) ? $answerMap[$qnum] : null;
+                $answerIndex = $correctLetter ? (ord($correctLetter) - ord('A') + 1) : null;
+
+                $result[] = [
+                    "level" => "1",
+                    "question" => $questionText,
+                    "option" => $options,
+                    "answer" => $answerIndex
+                ];
             }
-            echo json_encode($arrques);
+
+            echo json_encode($result);
         }
     }
 
@@ -131,13 +173,13 @@ class Question extends Controller
     {
         if (AuthCore::checkPermission("cauhoi", "create")) {
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                $mamon = $_POST['mamon'];
+              
                 $machuong = $_POST['machuong'];
                 $dokho = $_POST['dokho'];
                 $noidung = $_POST['noidung'];
                 $cautraloi = $_POST['cautraloi'];
                 $nguoitao = $_SESSION['user_id'];
-                $result = $this->cauHoiModel->create($noidung, $dokho, $mamon, $machuong, $nguoitao);
+                $result = $this->cauHoiModel->create($noidung, $dokho,$machuong, $nguoitao);
                 $macauhoi = mysqli_insert_id($result);
                 $check = '';
                 foreach ($cautraloi as $x) {
@@ -153,15 +195,15 @@ class Question extends Controller
         if (AuthCore::checkPermission("cauhoi", "create")) {
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $nguoitao = $_SESSION['user_id'];
-                $monhoc = $_POST['monhoc'];
                 $chuong = $_POST['chuong'];
                 $questions = $_POST["questions"];
                 foreach ($questions as $question) {
                     $level = $question['level'];
+                    $trangthai = 1;
                     $noidung = $question['question'];
                     $answer = $question['answer'];
                     $options = $question['option'];
-                    $result = $this->cauHoiModel->create($noidung, $level, $monhoc, $chuong, $nguoitao);
+                    $result = $this->cauHoiModel->create($noidung, $level, $chuong, $nguoitao,$trangthai);
                     $macauhoi = mysqli_insert_id($result);
                     $index = 1;
                     foreach ($options as $option) {
@@ -229,8 +271,8 @@ class Question extends Controller
                 $dokho = $_POST['dokho'];
                 $noidung = $_POST['noidung'];
                 $cautraloi = $_POST['cautraloi'];
-                $nguoitao = $_SESSION['user_id'];
-                $result = $this->cauHoiModel->update($id, $noidung, $dokho, $mamon, $machuong, $nguoitao);
+                $nguoitao =0;
+                $result = $this->cauHoiModel->update($id, $noidung, $dokho, $machuong, $nguoitao);
                 $macauhoi = $id;
                 foreach ($cautraloi as $x) {
                     $this->cauTraLoiModel->create($macauhoi, $x['content'], $x['check'] == 'true' ? 1 : 0);

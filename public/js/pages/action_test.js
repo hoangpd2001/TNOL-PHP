@@ -1,9 +1,11 @@
 Dashmix.helpersOnLoad(["js-flatpickr", "jq-datepicker", "jq-select2"]);
 
-let groups = [];
+let listMon = [];
 
 function getToTalQuestionOfChapter(chuong, monhoc, dokho) {
   var result = 0;
+
+  
   $.ajax({
     url: "./question/getsoluongcauhoi",
     type: "post",
@@ -15,6 +17,7 @@ function getToTalQuestionOfChapter(chuong, monhoc, dokho) {
     async: false,
     success: function (response) {
       result = response;
+     
     },
   });
   return result;
@@ -37,75 +40,77 @@ Dashmix.onLoad(() =>
   class {
     static initValidation() {
       Dashmix.helpers("jq-validation"),
+        // $.validator.addMethod(
+        //   "validTimeEnd",
+        //   function (value, element) {
+        //     var startTime = new Date($("#time-start").val());
+        //     var currentTime = new Date();
+        //     var endTime = new Date(value);
+        //     return endTime > startTime && endTime > currentTime;
+        //   },
+        //   "Thời gian kết thúc phải lớn hơn thời gian bắt đầu và không bé hơn thời gian hiện tại"
+        // );
+
+        // $.validator.addMethod(
+        //   "validTimeStart",
+        //   function (value, element) {
+        //     var startTime = new Date(value);
+        //     var currentTime = new Date();
+        //     return startTime > currentTime;
+        //   },
+        //   "Thời gian bắt đầu không được bé hơn thời gian hiện tại"
+        // );
+
         $.validator.addMethod(
-          "validTimeEnd",
-          function (value, element) {
-            var startTime = new Date($("#time-start").val());
-            var currentTime = new Date();
-            var endTime = new Date(value);
-            return endTime > startTime && endTime > currentTime;
+          "validSoLuong",
+          function (value, element, param) {
+            // Lấy giá trị chương, lọc bỏ các phần tử rỗng hoặc undefined
+           
+            let rawChuong = $("#chuong").val();
+            let c = Array.isArray(rawChuong)
+              ? rawChuong.filter((item) => item !== "")
+              : [];
+
+            // Lấy mã môn học từ nhóm học phần
+            let m = $("#monhoc").val(); 
+
+            // Gọi hàm lấy số lượng câu hỏi từ chương
+            let result =
+              parseInt(getToTalQuestionOfChapter(c, m, param)) >=
+              parseInt(value);
+
+            return result;
           },
-          "Thời gian kết thúc phải lớn hơn thời gian bắt đầu và không bé hơn thời gian hiện tại"
+          "Số lượng câu hỏi không đủ"
         );
+        
 
-      $.validator.addMethod(
-        "validTimeStart",
-        function (value, element) {
-          var startTime = new Date(value);
-          var currentTime = new Date();
-          return startTime > currentTime;
-        },
-        "Thời gian bắt đầu không được bé hơn thời gian hiện tại"
-      );
-
-      $.validator.addMethod(
-        "validSoLuong",
-        function (value, element, param) {
-          let c = $("#chuong").val() === undefined ? "" : $("#chuong").val();
-          let m =
-            $("#nhom-hp").val() == ""
-              ? 0
-              : groups[$("#nhom-hp").val()].mamonhoc;
-          let result =
-            parseInt(getToTalQuestionOfChapter(c, m, param)) >= parseInt(value);
-          return result;
-        },
-        "Số lượng câu hỏi không đủ"
-      );
-
-      $.validator.addMethod(
-        "validThoigianthi",
-        function (value, element, param) {
-          let startTime = new Date($("#time-start").val());
-          let endTime = new Date($("#time-end").val());
-          return (
-            startTime < endTime &&
-            parseInt(getMinutesBetweenDates(startTime, endTime)) >=
-              parseInt(value)
-          );
-        },
-        "Thời gian làm bài không hợp lệ"
-      );
+      // $.validator.addMethod(
+      //   "validThoigianthi",
+      //   function (value, element, param) {
+      //     let startTime = new Date($("#time-start").val());
+      //     let endTime = new Date($("#time-end").val());
+      //     return (
+      //       startTime < endTime &&
+      //       parseInt(getMinutesBetweenDates(startTime, endTime)) >=
+      //         parseInt(value)
+      //     );
+      //   },
+      //   "Thời gian làm bài không hợp lệ"
+      // );
 
       jQuery(".form-taodethi").validate({
         rules: {
           "name-exam": {
             required: true,
           },
-          "time-start": {
-            required: !0,
-            validTimeStart: true,
-          },
-          "time-end": {
-            required: !0,
-            validTimeEnd: true,
-          },
+     
           "exam-time": {
             required: !0,
             digits: true,
-            validThoigianthi: true,
+            // validThoigianthi: true,
           },
-          "nhom-hp": {
+          "monhoc": {
             required: !0,
           },
           user_nhomquyen: {
@@ -134,19 +139,10 @@ Dashmix.onLoad(() =>
           "name-exam": {
             required: "Vui lòng nhập tên đề kiểm tra",
           },
-          "time-start": {
-            required: "Vui lòng chọn thời điểm bắt đầu của bài kiểm tra",
-            validTimeStart:
-              "Thời gian bắt đầu không được bé hơn thời gian hiện tại",
-          },
-          "time-end": {
-            required: "Vui lòng chọn thời điểm kết thúc của bài kiểm tra",
-            validTimeEnd: "Thời gian kết thúc không hợp lệ",
-          },
           "exam-time": {
             required: "Vui lòng chọn thời gian làm bài kiểm tra",
           },
-          "nhom-hp": {
+          "monhoc": {
             required: "Vui lòng chọn nhóm học phần giảng dạy",
           },
           chuong: {
@@ -186,42 +182,36 @@ $(document).ready(function () {
     let html = "<option></option>";
     $.ajax({
       type: "post",
-      url: "./module/loadData",
+      url: "./subject/getAllByFaculty",
       async: false,
       data: {
         hienthi: 1,
       },
       dataType: "json",
       success: function (response) {
-        groups = response;
+        console.log(response)
+        listMon = response;
         response.forEach((item, index) => {
-          html += `<option value="${index}">${
-            item.mamonhoc +
-            " - " +
-            item.tenmonhoc +
-            " - NH" +
-            item.namhoc +
-            " - HK" +
-            item.hocky
+          html += `<option value="${item.mamonhoc}">${
+            item.mamonhoc + " - " + item.tenmonhoc 
           }</option>`;
         });
-        $("#nhom-hp").html(html);
+        $("#monhoc").html(html);
       },
     });
   }
 
   // Khi chọn nhóm học phần thì chương sẽ tự động đổi để phù hợp với môn học
-  $("#nhom-hp").on("change", function () {
-    let index = $(this).val();
-    let mamonhoc = groups[index].mamonhoc;
-    showListGroup(index);
+  $("#monhoc").on("change", function () {
+    
+    let mamonhoc = $("#monhoc").val();
     showChapter(mamonhoc);
   });
 
   // Hiển thị chương
   function showChapter(mamonhoc) {
     let html = "<option value=''></option>";
-    $("#chuong").val("").trigger("change");
+    $("#chuong").val(null).trigger("change");
     $.ajax({
       type: "post",
       url: "./subject/getAllChapter",
@@ -240,28 +230,28 @@ $(document).ready(function () {
   }
 
   // Hiển thị danh sách nhóm học phần
-  function showListGroup(index) {
-    let html = ``;
-    if (groups[index].nhom.length > 0) {
-      html += `<div class="col-12 mb-3">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="select-all-group">
-                <label class="form-check-label" for="select-all-group">Chọn tất cả</label>
-            </div></div>`;
-      groups[index].nhom.forEach((item) => {
-        html += `<div class="col-4">
-                    <div class="form-check">
-                        <input class="form-check-input select-group-item" type="checkbox" value="${item.manhom}"
-                            id="nhom-${item.manhom}" name="nhom-${item.manhom}">
-                        <label class="form-check-label" for="nhom-${item.manhom}">${item.tennhom}</label>
-                    </div>
-                </div>`;
-      });
-    } else {
-      html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
-    }
-    $("#list-group").html(html);
-  }
+  // function showListGroup(index) {
+  //   let html = ``;
+  //   if (listMon[index].nhom.length > 0) {
+  //     html += `<div class="col-12 mb-3">
+  //           <div class="form-check">
+  //               <input class="form-check-input" type="checkbox" value="" id="select-all-group">
+  //               <label class="form-check-label" for="select-all-group">Chọn tất cả</label>
+  //           </div></div>`;
+  //     listMon[index].nhom.forEach((item) => {
+  //       html += `<div class="col-4">
+  //                   <div class="form-check">
+  //                       <input class="form-check-input select-group-item" type="checkbox" value="${item.manhom}"
+  //                           id="nhom-${item.manhom}" name="nhom-${item.manhom}">
+  //                       <label class="form-check-label" for="nhom-${item.manhom}">${item.tennhom}</label>
+  //                   </div>
+  //               </div>`;
+  //     });
+  //   } else {
+  //     html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
+  //   }
+  //   $("#list-group").html(html);
+  // }
 
   // Chọn || Huỷ chọn tất cả nhóm
   $(document).on("click", "#select-all-group", function () {
@@ -270,7 +260,7 @@ $(document).ready(function () {
   });
 
   // Lấy các nhóm được chọn
-  function getGroupSelected() {
+  function getlistMonelected() {
     let result = [];
     $(".select-group-item").each(function () {
       if ($(this).prop("checked") == true) {
@@ -282,7 +272,7 @@ $(document).ready(function () {
 
   $("#tudongsoande").on("click", function () {
     $(".show-chap").toggle();
-    $("#chuong").val("").trigger("change");
+    $("#chuong").val(null).trigger("change");
   });
 
   showGroup();
@@ -291,30 +281,29 @@ $(document).ready(function () {
   $("#btn-add-test").click(function (e) {
     e.preventDefault();
     if ($(".form-taodethi").valid()) {
-      if (getGroupSelected().length != 0) {
+      
         $.ajax({
           type: "post",
           url: "./test/addTest",
           data: {
-            mamonhoc: groups[$("#nhom-hp").val()].mamonhoc,
+            mamonhoc: $("#monhoc").val(),
             tende: $("#name-exam").val(),
             thoigianthi: $("#exam-time").val(),
-            thoigianbatdau: $("#time-start").val(),
-            thoigianketthuc: $("#time-end").val(),
             socaude: $("#coban").val(),
             socautb: $("#trungbinh").val(),
             socaukho: $("#kho").val(),
             chuong: $("#chuong").val(),
             loaide: $("#tudongsoande").prop("checked") ? 1 : 0,
+            trangthai:$("#trangthai").prop("checked")? 0:-1,
             xemdiem: $("#xemdiem").prop("checked") ? 1 : 0,
             xemdapan: $("#xemda").prop("checked") ? 1 : 0,
             xembailam: $("#xembailam").prop("checked") ? 1 : 0,
             daocauhoi: $("#daocauhoi").prop("checked") ? 1 : 0,
             daodapan: $("#daodapan").prop("checked") ? 1 : 0,
             tudongnop: $("#tudongnop").prop("checked") ? 1 : 0,
-            manhom: getGroupSelected(),
           },
           success: function (response) {
+          
             if (response) {
               if ($("#tudongsoande").prop("checked")) location.href = "./test";
               else location.href = `./test/select/${response}`;
@@ -327,13 +316,6 @@ $(document).ready(function () {
             }
           },
         });
-      } else {
-        Dashmix.helpers("jq-notify", {
-          type: "danger",
-          icon: "fa fa-times me-1",
-          message: "Bạn phải chọn ít nhất một nhóm học phần!",
-        });
-      }
     }
   });
 
@@ -341,6 +323,7 @@ $(document).ready(function () {
   $("#btn-update-quesoftest").hide();
   // Khởi tạo biến đề thi để chứa thông tin đề
   let infodethi;
+  showGroup();
   function getDetail(made) {
     return $.ajax({
       type: "post",
@@ -376,7 +359,7 @@ $(document).ready(function () {
     let checkD = checkDate(dethi.thoigianbatdau);
     $("#name-exam").val(dethi.tende),
       $("#exam-time").val(dethi.thoigianthi),
-      $("#exam-time").prop("disabled", checkD);
+     
     $("#time-start").flatpickr({
       enableTime: true,
       altInput: true,
@@ -408,8 +391,10 @@ $(document).ready(function () {
     $("#daodapan").prop("checked", dethi.trondapan == "1");
     $("#tudongnop").prop("checked", dethi.nopbaichuyentab == "1");
     $("#btn-update-test").data("id", dethi.made);
+   
+ 
     $.when(showGroup(), showChapter(dethi.monthi)).done(function () {
-      $("#nhom-hp").val(findIndexGroup(dethi.nhom[0])).trigger("change");
+      $("#monhoc").val(dethi.monthi).trigger("change").prop("disabled", true); ;
       setGroup(dethi.nhom, dethi.thoigianbatdau);
       if (dethi.loaide == "1") {
         $("#chuong").prop("disabled", checkD);
@@ -418,15 +403,7 @@ $(document).ready(function () {
     });
   }
 
-  function findIndexGroup(manhom) {
-    let i = 0;
-    let index = -1;
-    while (i <= groups.length && index == -1) {
-      index = groups[i].nhom.findIndex((item) => item.manhom == manhom);
-      if (index == -1) i++;
-    }
-    return i;
-  }
+
 
   function setGroup(list, date) {
     let v = checkDate(date);
@@ -501,7 +478,7 @@ $(document).ready(function () {
         url: "./test/updateTest",
         data: {
           made: made,
-          mamonhoc: groups[$("#nhom-hp").val()].mamonhoc,
+          mamonhoc: $("#monhoc").val(),
           tende: $("#name-exam").val(),
           thoigianthi: $("#exam-time").val(),
           thoigianbatdau: $("#time-start").val(),
@@ -517,7 +494,7 @@ $(document).ready(function () {
           daocauhoi: $("#daocauhoi").prop("checked") ? 1 : 0,
           daodapan: $("#daodapan").prop("checked") ? 1 : 0,
           tudongnop: $("#tudongnop").prop("checked") ? 1 : 0,
-          manhom: getGroupSelected(),
+          manhom: getlistMonelected(),
         },
         success: function (response) {
           if (response) {
@@ -530,7 +507,7 @@ $(document).ready(function () {
             ) {
               location.href = `./test/select/${made}`;
             } else {
-              location.href = `./test`;
+              location.href = `./test/base`;
             }
           } else {
             Dashmix.helpers("jq-notify", {
