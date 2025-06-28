@@ -91,6 +91,12 @@ class Subject extends Controller
         $data = $this->monHocModel->getAll();
         echo json_encode($data);
     }
+    public function getDatabyUser()
+    {
+        $id = $_SESSION['user_id'];
+        $data = $this->monHocModel->getAllbyUser($id);
+        echo json_encode($data);
+    }
     public function getDetail()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {

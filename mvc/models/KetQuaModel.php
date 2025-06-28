@@ -209,12 +209,12 @@ class KetQuaModel extends DB
                 KQ.made,
                 KQ.diemthi
             FROM hocphan HP
-            JOIN giaodethilop GD ON GD.mahocphan = HP.mahocphan AND GD.made = $made
+            JOIN giaodethilop GD ON GD.mahocphan = HP.mahocphan AND GD.madethi = $made
             JOIN lop L ON HP.malop = L.malop
             JOIN sinhvien SV ON SV.malop = L.malop
             JOIN nguoidung ND ON ND.id = SV.id
             LEFT JOIN ketqua KQ ON KQ.manguoidung = ND.id AND KQ.made = $made
-            WHERE HP.manguongiao IN ($inManhom)
+            WHERE HP.mahocphan IN ($inManhom)
 
         ";
         }

@@ -14,9 +14,26 @@
             </div>
             <div id="side-content" class="d-none d-md-block push">
                 <h3 class="fs-5">CẤU HÌNH</h3>
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="tudongsoande" name="tudongsoande" checked>
-                    <label class="form-check-label" for="tudongsoande">Tự động lấy từ ngân hàng đề</label>
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Loại đề</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="loaide" id="de_tudong" value="1" checked>
+                        <label class="form-check-label" for="de_tudong">
+                            Tự động lấy từ ngân hàng đề
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="loaide" id="de_mau" value="2">
+                        <label class="form-check-label" for="de_mau">
+                            Sử dụng đề mẫu
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="loaide" id="de_thucong" value="0">
+                        <label class="form-check-label" for="de_thucong">
+                            Tự tạo đề thủ công
+                        </label>
+                    </div>
                 </div>
                 <div class="form-check form-switch mb-2">
                     <input class="form-check-input" type="checkbox" id="trangthai" name="trangthai">
@@ -78,7 +95,7 @@
                                     data-enable-time="true" data-time_24hr="true" placeholder="Đến">
                             </div>
                         </div> -->
-                    <div class="mb-4">
+                    <div class="mb-4" id="examtime">
                         <div class="input-group">
                             <span class="input-group-text">Thời gian làm bài</span>
                             <input type="number" class="form-control text-center" id="exam-time" name="exam-time"
@@ -117,7 +134,14 @@
                             data-placeholder="Chọn nhiều chương..." multiple>
                         </select>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-4 show-dethi">
+                        <label class="form-label fw-bold">Chọn các đề giống nhau</label>
+                        <div id="list-dethimau" class="border rounded p-3" style="max-height: 250px; overflow-y: auto;">
+                            <!-- JS sẽ render tại đây -->
+                        </div>
+                    </div>
+
+                    <div class="mb-4 " id="socau">
                         <div class="row">
                             <div class="col-4">
                                 <label class="form-label" for="coban">Số câu dễ</label>
@@ -146,20 +170,45 @@
     </div>
     </d>
     <script>
-        const loaideCheckbox = document.getElementById('loaide');
-        const tudongCheckbox = document.getElementById('tudongsoande');
+        const trangthaiCheckbox = document.getElementById("trangthai");
 
-        function updateCheckboxState() {
-            if (loaideCheckbox.checked) {
-                tudongCheckbox.checked = false;
-                tudongCheckbox.disabled = true;
+        document.querySelectorAll('input[name="loaide"]').forEach((radio) => {
+            radio.addEventListener("change", handleLoaiDeChange);
+        });
+
+        function handleLoaiDeChange() {
+            const selected = document.querySelector('input[name="loaide"]:checked').value;
+            const socau = document.getElementById("socau")
+            const examtime = document.getElementById("examtime")
+            if (selected == "1") {
+                // Vô hiệu hóa checkbox Đề kiểm tra
+                trangthaiCheckbox.checked = false;
+                trangthaiCheckbox.disabled = true;
+
+                // Ẩn các vùng tạo đề nếu có (ví dụ #taoDeSection)
+                document.getElementById("taoDeSection")?.classList.add("d-none");
+
             } else {
-                tudongCheckbox.disabled = false;
+                // Cho tick lại checkbox Đề kiểm tra
+                trangthaiCheckbox.disabled = false;
+
+                // Hiện lại vùng tạo đề
+                document.getElementById("taoDeSection")?.classList.remove("d-none");
             }
+            if (selected == "2") {
+                // Disable tất cả input con trong div #socau
+                socau.querySelectorAll("input").forEach(input => input.disabled = true);
+                examtime.querySelectorAll("input").forEach(input => input.disabled = true);
+
+            } else {
+                // Enable lại nếu không phải đề mẫu
+                socau.querySelectorAll("input").forEach(input => input.disabled = false);
+                examtime.querySelectorAll("input").forEach(input => input.disabled = false);
+
+            }
+
         }
 
-        loaideCheckbox.addEventListener('change', updateCheckboxState);
-
-        // Gọi 1 lần khi load trang để đồng bộ trạng thái
-        updateCheckboxState();
+        // Gọi ngay khi load để cập nhật giao diện ban đầu
+        handleLoaiDeChange();
     </script>

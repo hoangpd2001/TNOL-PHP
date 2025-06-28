@@ -6,6 +6,7 @@ $(document).ready(function () {
   const dethi = "dethi" + made;
   const cautraloi = "cautraloi" + made;
   function getQuestion() {
+   
     return $.ajax({
       type: "post",
       url: "./test/getQuestion",

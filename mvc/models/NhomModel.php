@@ -257,7 +257,7 @@ class NhomModel extends DB
     public function kickUser($manhom, $mssv)
     {
         $valid = true;
-        $sql = "DELETE FROM `chitietnhom` WHERE `manguoidung` = $mssv AND `manhom` = $manhom";
+        $sql = "DELETE FROM `chitietnhom` WHERE `manguoidung` = '$mssv' AND `manhom` = $manhom";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
         return $valid;

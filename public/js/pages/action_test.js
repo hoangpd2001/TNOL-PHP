@@ -1,7 +1,14 @@
 Dashmix.helpersOnLoad(["js-flatpickr", "jq-datepicker", "jq-select2"]);
 
 let listMon = [];
-
+$(document).ready(function () {
+  $(".js-select2").select2({
+    width: "100%",
+  });
+});
+$("#chuong, #dethimau").select2({
+  width: "100%",
+});
 function getToTalQuestionOfChapter(chuong, monhoc, dokho) {
   var result = 0;
 
@@ -40,27 +47,7 @@ Dashmix.onLoad(() =>
   class {
     static initValidation() {
       Dashmix.helpers("jq-validation"),
-        // $.validator.addMethod(
-        //   "validTimeEnd",
-        //   function (value, element) {
-        //     var startTime = new Date($("#time-start").val());
-        //     var currentTime = new Date();
-        //     var endTime = new Date(value);
-        //     return endTime > startTime && endTime > currentTime;
-        //   },
-        //   "Thời gian kết thúc phải lớn hơn thời gian bắt đầu và không bé hơn thời gian hiện tại"
-        // );
-
-        // $.validator.addMethod(
-        //   "validTimeStart",
-        //   function (value, element) {
-        //     var startTime = new Date(value);
-        //     var currentTime = new Date();
-        //     return startTime > currentTime;
-        //   },
-        //   "Thời gian bắt đầu không được bé hơn thời gian hiện tại"
-        // );
-
+       
         $.validator.addMethod(
           "validSoLuong",
           function (value, element, param) {
@@ -84,20 +71,6 @@ Dashmix.onLoad(() =>
           "Số lượng câu hỏi không đủ"
         );
         
-
-      // $.validator.addMethod(
-      //   "validThoigianthi",
-      //   function (value, element, param) {
-      //     let startTime = new Date($("#time-start").val());
-      //     let endTime = new Date($("#time-end").val());
-      //     return (
-      //       startTime < endTime &&
-      //       parseInt(getMinutesBetweenDates(startTime, endTime)) >=
-      //         parseInt(value)
-      //     );
-      //   },
-      //   "Thời gian làm bài không hợp lệ"
-      // );
 
       jQuery(".form-taodethi").validate({
         rules: {
@@ -189,11 +162,11 @@ $(document).ready(function () {
       },
       dataType: "json",
       success: function (response) {
-        console.log(response)
+        console.log(response);
         listMon = response;
         response.forEach((item, index) => {
           html += `<option value="${item.mamonhoc}">${
-            item.mamonhoc + " - " + item.tenmonhoc 
+            item.mamonhoc + " - " + item.tenmonhoc
           }</option>`;
         });
         $("#monhoc").html(html);
@@ -203,9 +176,9 @@ $(document).ready(function () {
 
   // Khi chọn nhóm học phần thì chương sẽ tự động đổi để phù hợp với môn học
   $("#monhoc").on("change", function () {
-    
     let mamonhoc = $("#monhoc").val();
     showChapter(mamonhoc);
+    showTest(mamonhoc);
   });
 
   // Hiển thị chương
@@ -225,33 +198,103 @@ $(document).ready(function () {
           html += `<option value="${item.machuong}">${item.tenchuong}</option>`;
         });
         $("#chuong").html(html);
+        $("#chuong").select2({
+          width: "100%", // đảm bảo full width
+        });
       },
     });
   }
 
-  // Hiển thị danh sách nhóm học phần
-  // function showListGroup(index) {
-  //   let html = ``;
-  //   if (listMon[index].nhom.length > 0) {
-  //     html += `<div class="col-12 mb-3">
-  //           <div class="form-check">
-  //               <input class="form-check-input" type="checkbox" value="" id="select-all-group">
-  //               <label class="form-check-label" for="select-all-group">Chọn tất cả</label>
-  //           </div></div>`;
-  //     listMon[index].nhom.forEach((item) => {
-  //       html += `<div class="col-4">
-  //                   <div class="form-check">
-  //                       <input class="form-check-input select-group-item" type="checkbox" value="${item.manhom}"
-  //                           id="nhom-${item.manhom}" name="nhom-${item.manhom}">
-  //                       <label class="form-check-label" for="nhom-${item.manhom}">${item.tennhom}</label>
-  //                   </div>
-  //               </div>`;
-  //     });
-  //   } else {
-  //     html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
-  //   }
-  //   $("#list-group").html(html);
-  // }
+  function showTest(mamonhoc) {
+    console.log("duoc goi");
+    let html = "<option value=''></option>";
+    $("#dethimau").val(null).trigger("change");
+    $.ajax({
+      type: "post",
+      url: "./test/getAllTestByUserAndSubject",
+      async: false,
+      data: {
+        mamonhoc: mamonhoc,
+      },
+      dataType: "json",
+      success: function (dethis) {
+        let html = "";
+
+        dethis.forEach((item, index) => {
+          html += `
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" 
+              name="dethimau[]" 
+              id="de_${item.made}" 
+              value="${item.made}"
+              data-socaude="${item.socaude}" 
+              data-socautb="${item.socautb}" 
+              data-socaukho="${item.socaukho}" 
+              data-thoigianthi="${item.thoigianthi}">
+            <label class="form-check-label" for="de_${item.made}">
+              <strong>${item.tende}</strong> | Người tạo: ${item.nguoitao} | 
+              Số câu: ${item.socaude}/${item.socautb}/${item.socaukho} | 
+              Thời gian: ${item.thoigianthi} phút
+            </label>
+          </div>
+        `;
+        
+        });
+
+        $("#list-dethimau").html(html);
+        $("#dethimau").select2({
+          width: "100%", // đảm bảo full width
+        });
+      },
+    });
+  }
+  // Lắng nghe sự kiện sau khi render xong danh sách đề
+  $(document).on("change", 'input[name="dethimau[]"]', function () {
+
+    const checked = $('input[name="dethimau[]"]:checked');
+    if (checked.length === 0) {
+      // Nếu không chọn đề nào thì hiện lại hết
+      $('input[name="dethimau[]"]').closest(".form-check").show();
+      $("#coban").val("");
+      $("#trungbinh").val("");
+      $("#kho").val("");
+      $("#exam-time").val("");
+      return;
+    }
+
+    // Lấy đề đầu tiên được chọn làm chuẩn
+    const firstChecked = checked.first();
+    const id = firstChecked.val();
+
+    // Lấy dữ liệu đề mẫu từ checkbox HTML
+    const [socaude, socautb, socaukho, thoigianthi] = [
+      firstChecked.data("socaude"),
+      firstChecked.data("socautb"),
+      firstChecked.data("socaukho"),
+      firstChecked.data("thoigianthi"),
+    ];
+    $("#coban").val(socaude);
+    $("#trungbinh").val(socautb);
+    $("#kho").val(socaukho);
+    $("#exam-time").val(thoigianthi);
+  
+    // Duyệt tất cả checkbox để kiểm tra
+    $('input[name="dethimau[]"]').each(function () {
+      const current = $(this);
+      const match =
+        current.data("socaude") == socaude &&
+        current.data("socautb") == socautb &&
+        current.data("socaukho") == socaukho &&
+        current.data("thoigianthi") == thoigianthi;
+
+      // Nếu không match, ẩn đi
+      if (!match && !current.is(":checked")) {
+        current.closest(".form-check").hide();
+      } else {
+        current.closest(".form-check").show();
+      }
+    });
+  });
 
   // Chọn || Huỷ chọn tất cả nhóm
   $(document).on("click", "#select-all-group", function () {
@@ -269,10 +312,26 @@ $(document).ready(function () {
     });
     return result;
   }
+  $(".show-dethi").hide();
+  $("input[name='loaide']").on("change", function () {
+    const value = $(this).val(); // 1, 2, hoặc 0
 
-  $("#tudongsoande").on("click", function () {
-    $(".show-chap").toggle();
-    $("#chuong").val(null).trigger("change");
+    if (value == "1") {
+      // Tự động -> hiện chương, ẩn đề mẫu
+      $(".show-chap").show();
+      $(".show-dethi").hide();
+      $("#dethimau").val(null).trigger("change");
+    } else if (value == "2") {
+      // Đề mẫu -> ẩn chương, hiện đề mẫu
+      $(".show-chap").hide();
+      $(".show-dethi").show();
+      $("#chuong").val(null).trigger("change");
+    } else {
+      // Thủ công -> ẩn cả chương và đề mẫu
+      $(".show-chap").hide();
+      $(".show-dethi").hide();
+      $("#chuong, #dethimau").val(null).trigger("change");
+    }
   });
 
   showGroup();
@@ -281,41 +340,61 @@ $(document).ready(function () {
   $("#btn-add-test").click(function (e) {
     e.preventDefault();
     if ($(".form-taodethi").valid()) {
-      
-        $.ajax({
-          type: "post",
-          url: "./test/addTest",
-          data: {
-            mamonhoc: $("#monhoc").val(),
-            tende: $("#name-exam").val(),
-            thoigianthi: $("#exam-time").val(),
-            socaude: $("#coban").val(),
-            socautb: $("#trungbinh").val(),
-            socaukho: $("#kho").val(),
-            chuong: $("#chuong").val(),
-            loaide: $("#tudongsoande").prop("checked") ? 1 : 0,
-            trangthai:$("#trangthai").prop("checked")? 0:-1,
-            xemdiem: $("#xemdiem").prop("checked") ? 1 : 0,
-            xemdapan: $("#xemda").prop("checked") ? 1 : 0,
-            xembailam: $("#xembailam").prop("checked") ? 1 : 0,
-            daocauhoi: $("#daocauhoi").prop("checked") ? 1 : 0,
-            daodapan: $("#daodapan").prop("checked") ? 1 : 0,
-            tudongnop: $("#tudongnop").prop("checked") ? 1 : 0,
-          },
-          success: function (response) {
-          
-            if (response) {
-              if ($("#tudongsoande").prop("checked")) location.href = "./test";
-              else location.href = `./test/select/${response}`;
-            } else {
-              Dashmix.helpers("jq-notify", {
-                type: "danger",
-                icon: "fa fa-times me-1",
-                message: "Tạo đề thi không thành công!",
-              });
-            }
-          },
+      const selectedTests = $('input[name="dethimau[]"]:checked')
+        .map(function () {
+          return $(this).val();
+        })
+        .get();
+      if (
+        selectedTests.length <= 1 &&
+        Number($("input[name='loaide']:checked").val())==2
+      ) {
+        Dashmix.helpers("jq-notify", {
+          type: "danger",
+          icon: "fa fa-times me-1",
+          message: "Số lượng đề thi mẫu phải lớn hơn 1!",
         });
+      }
+
+      $.ajax({
+        type: "post",
+        url: "./test/addTest",
+        data: {
+          mamonhoc: $("#monhoc").val(),
+          tende: $("#name-exam").val(),
+          thoigianthi: $("#exam-time").val(),
+          socaude: $("#coban").val(),
+          socautb: $("#trungbinh").val(),
+          socaukho: $("#kho").val(),
+          chuong: $("#chuong").val(),
+          loaide: Number($("input[name='loaide']:checked").val()),
+          trangthai: $("#trangthai").prop("checked") ? 0 : -1,
+          xemdiem: $("#xemdiem").prop("checked") ? 1 : 0,
+          xemdapan: $("#xemda").prop("checked") ? 1 : 0,
+          xembailam: $("#xembailam").prop("checked") ? 1 : 0,
+          daocauhoi: $("#daocauhoi").prop("checked") ? 1 : 0,
+          daodapan: $("#daodapan").prop("checked") ? 1 : 0,
+          tudongnop: $("#tudongnop").prop("checked") ? 1 : 0,
+          dethimau: selectedTests,
+        },
+        success: function (response) {
+          if (response) {
+            console.log(response);
+            const loaide = $("input[name='loaide']:checked").val();
+            if (loaide != 0) {
+              location.href = "./test/base"; // Tự động
+            } else {
+              location.href = `./test/select/${response}`; //tạo đề thủ công
+            }
+          } else {
+            Dashmix.helpers("jq-notify", {
+              type: "danger",
+              icon: "fa fa-times me-1",
+              message: "Tạo đề thi không thành công!",
+            });
+          }
+        },
+      });
     }
   });
 
@@ -359,19 +438,18 @@ $(document).ready(function () {
     let checkD = checkDate(dethi.thoigianbatdau);
     $("#name-exam").val(dethi.tende),
       $("#exam-time").val(dethi.thoigianthi),
-     
-    $("#time-start").flatpickr({
-      enableTime: true,
-      altInput: true,
-      allowInput: checkD,
-      defaultDate: dethi.thoigianbatdau,
-      onReady: function (selectedDates, dateStr, instance) {
-        if (checkD) {
-          $(instance.input).prop("disabled", true);
-          instance._input.disabled = true;
-        }
-      },
-    });
+      $("#time-start").flatpickr({
+        enableTime: true,
+        altInput: true,
+        allowInput: checkD,
+        defaultDate: dethi.thoigianbatdau,
+        onReady: function (selectedDates, dateStr, instance) {
+          if (checkD) {
+            $(instance.input).prop("disabled", true);
+            instance._input.disabled = true;
+          }
+        },
+      });
     $("#time-end").flatpickr({
       enableTime: true,
       altInput: true,
@@ -382,8 +460,10 @@ $(document).ready(function () {
     $("#trungbinh").val(dethi.socautb),
       $("#trungbinh").prop("disabled", checkD);
     $("#kho").val(dethi.socaukho), $("#kho").prop("disabled", checkD);
-    $("#tudongsoande").prop("checked", dethi.loaide == "1");
-    $("#tudongsoande").prop("disabled", checkD);
+    $(`input[name='loaide'][value='${dethi.loaide}']`).prop("checked", true);
+    if (checkD) {
+      $("input[name='loaide']").prop("disabled", true);
+    }
     $("#xemdiem").prop("checked", dethi.xemdiemthi == "1");
     $("#xemda").prop("checked", dethi.xemdapan == "1");
     $("#xembailam").prop("checked", dethi.xemdapan == "1");
@@ -391,10 +471,9 @@ $(document).ready(function () {
     $("#daodapan").prop("checked", dethi.trondapan == "1");
     $("#tudongnop").prop("checked", dethi.nopbaichuyentab == "1");
     $("#btn-update-test").data("id", dethi.made);
-   
- 
+
     $.when(showGroup(), showChapter(dethi.monthi)).done(function () {
-      $("#monhoc").val(dethi.monthi).trigger("change").prop("disabled", true); ;
+      $("#monhoc").val(dethi.monthi).trigger("change").prop("disabled", true);
       setGroup(dethi.nhom, dethi.thoigianbatdau);
       if (dethi.loaide == "1") {
         $("#chuong").prop("disabled", checkD);
@@ -402,8 +481,6 @@ $(document).ready(function () {
       } else $(".show-chap").hide();
     });
   }
-
-
 
   function setGroup(list, date) {
     let v = checkDate(date);
@@ -468,7 +545,7 @@ $(document).ready(function () {
       (!checkDate(infodethi.thoigianbatdau) && $(".form-taodethi").valid()) ||
       validUpdate()
     ) {
-      let loaide = $("#tudongsoande").prop("checked") ? 1 : 0;
+      let loaide = parseInt($("input[name='loaide']:checked").val());
       let made = $(this).data("id");
       let socaude = $("#coban").val();
       let socautb = $("#trungbinh").val();

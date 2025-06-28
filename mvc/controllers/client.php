@@ -55,6 +55,53 @@ class Client extends Controller{
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
         }
     }
+    public function review_action()
+    {
+        $mamon = $_GET['mamon'] ?? null;
+        $chuongs = $_GET['chuongs'] ?? null;
+        $thoigian = $_GET['thoigian'] ?? null;
+        $socau = $_GET['socau'] ?? null;
+        if (AuthCore::checkPermission("tghocphan", "join")) {
+            $this->view("single_layout", [
+                "Page" => "client_review_action",
+                "Title" => "Học phần",
+                "mamon" => $mamon,
+                "chuongs" => $chuongs,
+                "thoigian" => $thoigian,
+                "socau" =>$socau,
+                "Script" => "client_review_action",
+                "Plugin" => [
+                
+                    "sweetalert2" => 1,
+                
+                    
+                ]
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        }
+    }
+    
+    public function autoreview()
+    {
+        if (AuthCore::checkPermission("tghocphan", "join")) {
+            $this->view("main_layout", [
+                "Page" => "client_review",
+                "Title" => "Ôn luyện",
+                "Script" => "client_review",
+                "Plugin" => [
+                    "jquery-validate" => 1,
+                    "notify" => 1,
+                    "datepicker" => 1,
+                    "flatpickr" => 1,
+                    "sweetalert2" => 1,
+                    "select" => 1,
+                ]
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        }
+    } 
     public function test() {
         if (AuthCore::checkPermission("tgthi", "join")) {
             $this->view("main_layout", [

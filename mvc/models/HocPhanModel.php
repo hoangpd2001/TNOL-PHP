@@ -61,6 +61,17 @@ class HocPhanModel extends DB
         $result = mysqli_query($this->con, $sql);
         return mysqli_fetch_assoc($result);
     }
+    public function getSvList($manhom)
+    {
+        $sql = "SELECT nguoidung.id, avatar, hoten, email, gioitinh, ngaysinh FROM hocphan, lop ,sinhvien, nguoidung 
+        WHERE hocphan.malop=lop.malop and sinhvien.malop = lop.malop and nguoidung.id = sinhvien.id and hocphan.mahocphan=$manhom";
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
 
     //    Lấy tất cả nhóm của người tạo và gom lại theo mã môn học, năm học, học kỳ
     public function getBySubject($trangthai, $userid )

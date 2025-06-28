@@ -23,28 +23,38 @@ class User_Online extends Controller {
             if (is_readable($file) && time() - filemtime($file) < 60) {
                 $content = @file_get_contents($file);
                 if ($content !== false && strpos($content, $userId) !== false) {
-                    echo "Người dùng đang trực tuyến 🟢";
-                    return;
+                    return true;
                 }
             }
         }
-        echo "Người dùng đang không trực tuyến 🔴";
+        return false;
     }
-    function getOnlineUserIds(): array
+    function addOnlineStatusToUsers(array $users): array
     {
+        // Lấy danh sách ID đang online từ session
         $session_dir = session_save_path();
         $session_files = glob("$session_dir/sess_*");
-        $online_users = [];
+        $online_ids = [];
 
         foreach ($session_files as $file) {
             if (is_readable($file) && time() - filemtime($file) < 60) {
                 $content = @file_get_contents($file);
-                if ($content !== false && preg_match('/user_id\|s:\d+:"([^"]+)"/', $content, $matches)) {
-                    $online_users[] = $matches[1]; // user_id dạng CDxxxx
+                if (
+                    $content !== false &&
+                    preg_match('/user_id\|s:\d+:"([^"]+)"/', $content, $matches)
+                ) {
+                    $online_ids[] = $matches[1];
                 }
             }
         }
-        return $online_users;
+
+        // Thêm trường 'check' vào từng user trong mảng
+        foreach ($users as &$user) {
+            $id = is_array($user) ? $user['id'] : $user->id;
+            $user['check'] = in_array($id, $online_ids);
+        }
+
+        return $users;
     }
 }
 ?>

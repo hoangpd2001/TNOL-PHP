@@ -11,12 +11,19 @@ class Test extends Controller
     public $dethimodel;
     public $chitietde;
     public $ketquamodel;
-
+    public $mailAuthmodel;
+    public $nhomModel;
+    public $nguoidung;
+    public $hocPhanModel;
     public function __construct()
     {
         $this->dethimodel = $this->model("DeThiModel");
         $this->chitietde = $this->model("ChiTietDeThiModel");
         $this->ketquamodel = $this->model("KetQuaModel");
+        $this->mailAuthmodel =$this->model("MailAuth"); 
+        $this->nhomModel = $this->model("NhomModel");
+        $this->hocPhanModel = $this->model("HocPhanModel"); 
+        $this->nguoidung = $this->model("NguoiDungModel");
         parent::__construct();
         require_once "./mvc/core/Pagination.php";
     }
@@ -122,8 +129,9 @@ class Test extends Controller
     {
         if (filter_var($made, FILTER_VALIDATE_INT) !== false) {
             $dethi = $this->dethimodel->getById($made);
+            $checkadmmin = $this->nguoidung->checkAdmin($_SESSION['user_id']);
             if (isset($dethi)) {
-                if (AuthCore::checkPermission("dethi", "update") && $dethi['nguoitao'] == $_SESSION['user_id']) {
+                if (AuthCore::checkPermission("dethi", "update") && ($dethi['nguoitao'] == $_SESSION['user_id'] ||    $checkadmmin )) {
                     $this->view("main_layout", [
                         "Page" => "add_update_test",
                         "Title" => "Cập nhật đề kiểm tra",
@@ -189,12 +197,13 @@ class Test extends Controller
     public function detail($made)
     {
         if (filter_var($made, FILTER_VALIDATE_INT) !== false) {
-
+        
             $loaigiao = $_GET["loaigiao"];
             $manguongiao = $_GET["manguongiao"];
             $dethi = $this->dethimodel->getInfoTestBasic($made, $loaigiao, $manguongiao);
+            $checkadmmin = $this->nguoidung->checkAdmin($_SESSION['user_id']);
             if (isset($dethi)) {
-                if (AuthCore::checkPermission("dethi", "create") && $dethi['nguoitao'] == $_SESSION['user_id']) {
+                if (AuthCore::checkPermission("dethi", "create") && ($dethi['nguoitao'] == $_SESSION['user_id'] || $checkadmmin)) {
                     $this->view("main_layout", [
                         "Page" => "test_detail",
                         "Title" => "Danh sách đã thi",
@@ -222,8 +231,9 @@ class Test extends Controller
     {
         if (filter_var($made, FILTER_VALIDATE_INT) !== false) {
             $check = $this->dethimodel->getById($made);
+            $checkadmmin = $this->nguoidung->checkAdmin($_SESSION['user_id']);
             if (isset($check)) {
-                if (($check && AuthCore::checkPermission("dethi", "create") || AuthCore::checkPermission("dethi", "update")) && $check['loaide'] == 0 && $check['nguoitao'] == $_SESSION['user_id']) {
+                if (($check && AuthCore::checkPermission("dethi", "create") || AuthCore::checkPermission("dethi", "update")) && $check['loaide'] == 0 && (($check['nguoitao'] == $_SESSION['user_id']) || $checkadmmin)) {
                     $this->view('main_layout', [
                         "Page" => "select_question",
                         "Title" => "Chọn câu hỏi",
@@ -322,7 +332,11 @@ class Test extends Controller
             $daodapan = $_POST['daodapan'];
             $tudongnop = $_POST['tudongnop'];
             $trangthai = $_POST['trangthai'];
-            $result = $this->dethimodel->create($mamonhoc, $nguoitao, $tende, $thoigianthi, $xembailam, $xemdiem, $xemdapan, $daocauhoi, $daodapan, $tudongnop, $loaide, $socaude, $socautb, $socaukho, $chuong, $trangthai);
+            $dethimau = isset($_POST['dethimau']) ? $_POST['dethimau'] : array();
+            $result = $this->dethimodel->create($mamonhoc, $nguoitao, $tende,
+             $thoigianthi, $xembailam, $xemdiem,
+              $xemdapan, $daocauhoi, $daodapan, $tudongnop, $loaide, 
+              $socaude, $socautb, $socaukho, $chuong, $trangthai,$dethimau);
             echo $result;
         }
     }
@@ -417,6 +431,14 @@ class Test extends Controller
         }
     }
 
+    public function getQuestionFromBaseTest()
+    {
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        
+            $result = $this->dethimodel->getQuestionFromBaseTest(70);
+            echo json_encode($result);
+        }
+    }
 
     public function startTest()
     {
@@ -510,7 +532,13 @@ class Test extends Controller
         $result = $this->ketquamodel->getStatictical($made, $manhom, $loaigiao);
         echo json_encode($result);
     }
-
+    public function getAllTestByUserAndSubject()
+    {
+        $user_id = $_SESSION['user_id'];
+        $mamonhoc = $_POST['mamonhoc'];
+        $result = $this->dethimodel->getAllTestByUserAndSubject($user_id, $mamonhoc);
+        echo json_encode($result);
+    }
     public function chuyentab()
     {
         $made = $_POST['made'];
@@ -784,14 +812,46 @@ class Test extends Controller
     public function addAssign()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $made = $_POST['made']; // mã đề
-            $manhom = $_POST['manhom']; // mảng mã nhóm hoặc mã học phần
+            $made = $_POST['made'];
+            $manhoms = $_POST['manhom']; // mảng
             $thoigianbatdau = $_POST['thoigianbatdau'];
-            $thoigianketthuc = isset($_POST['thoigianketthuc']) && $_POST['thoigianketthuc'] !== '' ? $_POST['thoigianketthuc'] : null;
+            $thoigianketthuc = !empty($_POST['thoigianketthuc']) ? $_POST['thoigianketthuc'] : null;
             $hinhthuc = $_POST['hinhthuc'];
-            $result = $this->dethimodel->create_giaodethi($made, $manhom, $thoigianbatdau, $thoigianketthuc, $hinhthuc);
-
+    
+            // Tạo giao đề cho từng nhóm
+            $result = $this->dethimodel->create_giaodethi($made, $manhoms, $thoigianbatdau, $thoigianketthuc, $hinhthuc);
+            $dethi = $this->dethimodel->getById($made);
+    
+            // Gom toàn bộ nhân sự & nhóm
+    
+            foreach ($manhoms as $manhom) {
+                // Ép về integer
+                $manhom = (int)$manhom;
+    
+                if ($hinhthuc == "hocphan") {
+                    $group = $this->hocPhanModel->getDetailGroup($manhom);
+                    $students = $this->hocPhanModel->getSvList($manhom);
+                } else {
+                    $group = $this->nhomModel->getDetailGroup($manhom);
+                    $students = $this->nhomModel->getSvList($manhom);
+                }
+                $this->mailAuthmodel->sendAddTest(
+                    $dethi["tende"],
+                    $dethi["tenmonhoc"],
+                    $dethi["thoigianthi"],
+                    $thoigianbatdau,
+                    $thoigianketthuc,
+                    $hinhthuc,
+                    $group,     
+                    $students
+                );
+               
+            }
+            
+       
+    
             echo json_encode($result);
         }
     }
+    
 }

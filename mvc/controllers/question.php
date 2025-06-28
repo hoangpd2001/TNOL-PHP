@@ -8,11 +8,12 @@ class Question extends Controller
 {
     public $cauHoiModel;
     public $cauTraLoiModel;
-
+    public $nguoiDungModel;
     function __construct()
     {
         $this->cauHoiModel = $this->model("CauHoiModel");
         $this->cauTraLoiModel = $this->model("CauTraLoiModel");
+        $this->nguoiDungModel = $this->model("NguoiDungModel");
         parent::__construct();
         require_once "./mvc/core/Pagination.php";
     }
@@ -38,8 +39,75 @@ class Question extends Controller
             $this->view("single_layout", ["Page" => "error/page_404","Title" => "Lỗi !"]);
         }
     }
+    function approve()
+    {
+        if (AuthCore::checkPermission("cauhoi", "update")) {
+            $this->view("main_layout", [
+                "Page" => "question_approve",
+                "Title" => "Câu hỏi",
+                "Plugin" => [
+                    "ckeditor" => 1,
+                    "select" => 1,
+                    "notify" => 1,
+                    "sweetalert2" => 1,
+                    "pagination" => [],
+                    "jquery-validate" => 1,
+                ],
+                "Script" => "question_approve",
+                "user_id" => $_SESSION['user_id'],
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_404", "Title" => "Lỗi !"]);
+        }
+    }
 
     public function xulyDocx()
+    {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("cauhoi", "create")) {
+            require_once 'vendor/autoload.php';
+            $filename = $_FILES["fileToUpload"]["tmp_name"];
+            $objReader = WordIOFactory::createReader('Word2007');
+            $phpWord = $objReader->load($filename);
+            $text = '';
+            // Lấy kí tự từng đoạn
+            function getWordText($element)
+            {
+                $result = '';
+                if ($element instanceof AbstractContainer) {
+                    foreach ($element->getElements() as $element) {
+                        $result .= getWordText($element);
+                    }
+                } elseif ($element instanceof Text) {
+                    $result .= $element->getText();
+                }
+                return $result;
+            }
+
+            foreach ($phpWord->getSections() as $section) {
+                foreach ($section->getElements() as $element) {
+                    $text .= trim(getWordText($element));
+                    $text .= "\\n";
+                }
+            }
+
+            $text = rtrim($text, "\\n");
+            substr($text, -1);
+            $questions = explode("\\n\\n", $text);
+            $arrques = array();
+            for ($i = 0; $i < count($questions); $i++) {
+                $data = explode("\\n", $questions[$i]);
+                $arrques[$i]['level'] = substr($data[0], 1, 1);
+                $arrques[$i]['question'] = substr(trim($data[0]), 4);
+                $arrques[$i]['answer'] = ord(trim(substr($data[count($data) - 1], 8))) - 65 + 1;
+                $arrques[$i]['option'] = array();
+                for ($j = 1; $j < count($data) - 1; $j++) {
+                    $arrques[$i]['option'][] = trim(substr($data[$j], 3));
+                }
+            }
+            echo json_encode($arrques);
+        }
+    }
+    public function xulyDocx2()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("cauhoi", "create")) {
             require_once 'vendor/autoload.php';
@@ -179,7 +247,8 @@ class Question extends Controller
                 $noidung = $_POST['noidung'];
                 $cautraloi = $_POST['cautraloi'];
                 $nguoitao = $_SESSION['user_id'];
-                $result = $this->cauHoiModel->create($noidung, $dokho,$machuong, $nguoitao);
+                $checkadmin = $this->nguoiDungModel->checkAdmin($nguoitao);
+                $result = $this->cauHoiModel->create($noidung, $dokho,$machuong, $nguoitao, $checkadmin?1:0);
                 $macauhoi = mysqli_insert_id($result);
                 $check = '';
                 foreach ($cautraloi as $x) {
@@ -195,11 +264,12 @@ class Question extends Controller
         if (AuthCore::checkPermission("cauhoi", "create")) {
             if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $nguoitao = $_SESSION['user_id'];
+                $checkadmin = $this->nguoiDungModel->checkAdmin($nguoitao);
                 $chuong = $_POST['chuong'];
                 $questions = $_POST["questions"];
                 foreach ($questions as $question) {
                     $level = $question['level'];
-                    $trangthai = 1;
+                    $trangthai = $checkadmin?1:0;
                     $noidung = $question['question'];
                     $answer = $question['answer'];
                     $options = $question['option'];
@@ -227,6 +297,46 @@ class Question extends Controller
                 $result = $this->cauHoiModel->getAll();
                 echo json_encode($result);    
             }
+        }
+    }
+    public function getQuestionByClientReview()
+    {
+       
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $chuongs = $_POST["chuongs"];
+                
+                $socau = $_POST["socau"];
+                $result = $this->cauHoiModel->getQuestionByClientReview($chuongs, $socau);
+                echo json_encode($result);
+            }
+        
+    }
+    public function getAnserByClientReview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $cauhois = $_POST["cauhois"]; // array of objects
+            $macauhoiList = array_map(function ($q) {
+                return $q['macauhoi'];
+            }, $cauhois);
+            $macauhoiStr = implode(",", $macauhoiList);
+
+            $cautraloiList = $this->cauHoiModel->getAnserByClientReview($macauhoiStr);
+
+            // Gắn vào từng câu hỏi
+            foreach ($cauhois as &$q) {
+                $q['cautraloi'] = $cautraloiList[$q['macauhoi']] ?? [];
+            }
+
+            echo json_encode($cauhois);
+        }
+    }
+
+    public function count()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $chuongs = $_POST['chuongs'] ?? '';
+            $total = $this->model("CauHoiModel")->countQuestion($chuongs);
+            echo json_encode(["total" => $total]);
         }
     }
 
@@ -271,8 +381,9 @@ class Question extends Controller
                 $dokho = $_POST['dokho'];
                 $noidung = $_POST['noidung'];
                 $cautraloi = $_POST['cautraloi'];
+                $trangthai = $_POST['trangthai'];
                 $nguoitao =0;
-                $result = $this->cauHoiModel->update($id, $noidung, $dokho, $machuong, $nguoitao);
+                $result = $this->cauHoiModel->update($id, $noidung, $dokho, $machuong, $nguoitao, $trangthai);
                 $macauhoi = $id;
                 foreach ($cautraloi as $x) {
                     $this->cauTraLoiModel->create($macauhoi, $x['content'], $x['check'] == 'true' ? 1 : 0);

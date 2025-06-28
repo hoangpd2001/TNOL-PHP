@@ -38,29 +38,124 @@ class MailAuth extends DB
         try {
             $this->mail->addAddress($email); // Name is optional
             $this->mail->isHTML(true);   // Set email format to HTML
-            $this->mail->Subject = 'Code OPT';
-            $this->mail->Body = '<div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
-                <div style="margin:50px auto;width:70%;padding:20px 0">
-                <div style="border-bottom:1px solid #eee">
-                    <a href="#" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">SGU TEST</a>
+            $this->mail->Subject = 'Ma Xac Thuc OTP';
+
+            $this->mail->Body = '
+            <div style="font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f4f4f4; border-radius: 8px;">
+                <div style="background-color: #0b3d91; padding: 20px; border-radius: 8px 8px 0 0; color: white;">
+                    <h2 style="margin: 0; font-size: 24px;">Trường Cao đẳng nghề Bách khoa Hà Nội</h2>
+                    <p style="margin: 0; font-size: 14px;">Hactech - Hệ thống xác thực người dùng</p>
                 </div>
-                <p style="font-size:1.1em">Hi,</p>
-                <p>Thank you for choosing Your Brand. Use the following OTP to complete your Sign Up procedures. OTP is valid for 5 minutes</p>
-                <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">'.$opt.'</h2>
-                <p style="font-size:0.9em;">Regards,<br />SGU TEST</p>
-                <hr style="border:none;border-top:1px solid #eee" />
-                <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-                    <p>QA Inc</p>
-                    <p>Số 273 An Dương Vương, Phường 3, Quận 5, TP. HCM</p>
-                    <p>Việt Nam</p>
+                <div style="background-color: white; padding: 30px; border-radius: 0 0 8px 8px;">
+                    <p style="font-size: 16px;">Chào bạn,</p>
+                    <p style="font-size: 15px; line-height: 1.6;">
+                        Cảm ơn bạn đã sử dụng hệ thống của Hactech. Mã xác thực (OTP) của bạn là:
+                    </p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span style="display: inline-block; background-color: #0b3d91; color: white; font-size: 24px; padding: 10px 20px; border-radius: 6px; letter-spacing: 2px;">
+                            ' . $opt . '
+                        </span>
+                    </div>
+                    <p style="font-size: 14px; color: #555;">
+                        Mã OTP có hiệu lực trong vòng <strong>5 phút</strong>. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email.
+                    </p>
+                    <p style="font-size: 14px; color: #999; margin-top: 30px;">Trân trọng,<br><strong>Hactech</strong></p>
                 </div>
+                <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 10px;">
+                    Trường Cao đẳng nghề Bách khoa Hà Nội - Số 169 Trương Định, Hai Bà Trưng, Hà Nội
                 </div>
-                </div>';
-            $this->mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+            </div>';
+
+            $this->mail->AltBody = 'Mã xác thực OTP của bạn là: ' . $opt;
             $this->mail->send();
             echo "Success send";
         } catch (Exception $e) {
             echo "Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}";
+        }
+    }
+    public function sendAddTest($tende, $tenmonhoc, $thoigianthi, $thoigianbatdau, $thoigianketthuc, $hinhthuc, $group, $users)
+    {
+        foreach ($users as $user) {
+            try {
+                $this->mail->clearAddresses();
+                $this->mail->addAddress($user['email'], $user['hoten']);
+                $this->mail->isHTML(true);
+                $this->mail->Subject = "Thong Bao Giao Bai Tap";
+
+                // Format thời gian
+                $start = date("H:i d/m/Y", strtotime($thoigianbatdau));
+                $end = $thoigianketthuc ? date("H:i d/m/Y", strtotime($thoigianketthuc)) : "Không giới hạn";
+
+                // Tên giao theo
+                $giaotheo = ($hinhthuc == "hocphan") ? "Lớp: ". $group["tenlop"] ." - ". $group["tenkhoahoc"] : "Nhóm: ". $group["tennhom"];
+                $giaovien = $group["hoten"];
+
+                $this->mail->Body = '
+            <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; background:#f9f9f9; border-radius:8px;">
+                <h2 style="color:#0b3d91;">Trường Cao đẳng nghề Bách khoa Hà Nội - HACTECH</h2>
+                <p>Xin chào <strong>' . htmlspecialchars($user['hoten']) . '</strong>,</p>
+                <p>Bạn đã được giao một đề thi mới. Thông tin chi tiết như sau:</p>
+                <ul>
+                    <li><strong>Tên đề thi:</strong> ' . htmlspecialchars($tende) . '</li>
+                    <li><strong>Môn học:</strong> ' . htmlspecialchars($tenmonhoc) . '</li>
+                    <li><strong>Thời gian làm bài:</strong> ' . htmlspecialchars($thoigianthi) . ' phút</li>
+                    <li><strong>Bắt đầu lúc:</strong> ' . $start . '</li>
+                    <li><strong>Kết thúc lúc:</strong> ' . $end . '</li>
+                    <li><strong>Giao theo:</strong> ' . $giaotheo . '</li>
+                    <li><strong>Giảng viên phụ trách:</strong> ' . htmlspecialchars($giaovien) . '</li>
+                </ul>
+                <p style="margin-top:20px;">Vui lòng đăng nhập hệ thống để làm bài thi đúng thời gian quy định.</p>
+                <p style="color:#999; font-size:12px;">Email này được gửi tự động từ hệ thống của HACTECH. Vui lòng không phản hồi.</p>
+            </div>';
+
+                $this->mail->AltBody = "Bạn đã được giao đề thi '$tende' môn $tenmonhoc. Bắt đầu: $start. Kết thúc: $end.";
+
+                $this->mail->send();
+            } catch (Exception $e) {
+                // Log nếu cần: error_log("Lỗi gửi email tới {$user['email']}: " . $e->getMessage());
+                continue;
+            }
+        }
+    }
+    public function sendAnnouncement($content, $thoigiantao, $loaigiao, $group, $users, $giaovien)
+    {
+        foreach ($users as $user) {
+            try {
+                $this->mail->clearAddresses();
+                $this->mail->addAddress($user['email'], $user['hoten']);
+                $this->mail->isHTML(true);
+                $this->mail->Subject = "HACTECH - Thong Bao Moi";
+
+                // Format thời gian tạo
+                $thoigian = date("H:i d/m/Y", strtotime($thoigiantao));
+
+                $giaotheo = ($loaigiao == "hocphan")
+                    ? "Lớp: " . $group["tenlop"] . " - Khóa: " . $group["tenkhoahoc"]
+                    : "Nhóm: " . $group["tennhom"];
+
+                $this->mail->Body = '
+                    <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; background:#f9f9f9; border-radius:8px;">
+                        <h2 style="color:#0b3d91;">Trường Cao đẳng nghề Bách khoa Hà Nội - HACTECH</h2>
+                        <p>Xin chào <strong>' . htmlspecialchars($user['hoten']) . '</strong>,</p>
+                        <p>Bạn vừa nhận được một thông báo mới:</p>
+                        <ul>
+                            <li><strong>Giao theo:</strong> ' . $giaotheo . '</li>
+                            <li><strong>Thời gian gửi:</strong> ' . $thoigian . '</li>
+                            <li><strong>Người thông báo:</strong> ' . htmlspecialchars($giaovien['hoten']) . '</li>
+                            <li><strong>Nội dung:</strong><br>' . nl2br(htmlspecialchars($content)) . '</li>
+                        </ul>
+                        <p style="margin-top:20px;">Vui lòng đăng nhập vào hệ thống để xem chi tiết.</p>
+                        <p style="color:#999; font-size:12px;">Email này được gửi tự động từ hệ thống của HACTECH. Vui lòng không phản hồi.</p>
+                    </div>';
+
+                $this->mail->AltBody = "Bạn có thông báo mới từ giáo viên " . $giaovien['hoten'] . ": " . $content;
+
+                $this->mail->send();
+            } catch (Exception $e) {
+                // Ghi log lỗi nếu cần
+                // error_log("Lỗi gửi email tới {$user['email']}: " . $e->getMessage());
+                continue;
+            }
         }
     }
 }

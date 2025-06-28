@@ -254,23 +254,21 @@ $(document).ready(function () {
     if (announces.length != 0) {
       announces.forEach((announce) => {
         html += `
-                <li>
-                <a class="d-flex text-dark py-2" href="javascript:void(0)">
-                    <div class="flex-shrink-0 mx-3">
+              <li>
+                    <a class="d-flex text-dark py-2" href="javascript:void(0)">
+                      <div class="flex-shrink-0 mx-3">
                         <img class="img-avatar img-avatar48" src="./public/media/avatars/${
-                          announce.avatar == null
-                            ? "avatar2.jpg"
-                            : announce.avatar
+                          announce.avatar == null ? "avatar2.jpg" : announce.avatar
                         }" alt="">
-                    </div>
-                    <div class="flex-grow-1 fs-sm pe-2">
-                        <div class="fw-semibold">${announce.noidung}</div>
-                        <div class="text-muted">${formatDate(
-                          announce.thoigiantao
-                        )}</div>
-                    </div>
-                </a>
-            </li>
+                      </div>
+                      <div class="flex-grow-1 fs-sm pe-2">
+                        <div class="fw-semibold">${announce.hoten}</div>
+                        <div class="text-dark">${announce.noidung}</div>
+                        <div class="text-muted">${formatDate(announce.thoigiantao)}</div>
+                      </div>
+                    </a>
+                  </li>
+
                 `;
       });
     } else {
@@ -313,6 +311,7 @@ $(document).ready(function () {
       url: "./teacher_announcement/getAnnounce",
       data: {
         manhom: manhom,
+        loaigiao:1,
       },
       dataType: "json",
       success: function (response) {

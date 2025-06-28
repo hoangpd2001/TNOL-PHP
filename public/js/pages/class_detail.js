@@ -213,10 +213,12 @@ $(document).ready(function () {
           type: "post",
           url: "./teacher_announcement/getAnnounce",
           data: {
-              manhom: manhom
+              manhom: manhom,
+              loaigiao:0,
           },
           dataType: "json",
           success: function (response) {
+            console.log(response);
               showAnnouncement(response);
           }
       });
@@ -439,6 +441,62 @@ $(document).ready(function () {
         },
       });
     }
+  });
+  $("#form-thongbao").on("submit", function (e) {
+    e.preventDefault();
+    console.log("da an");
+    let noidung = $("#input-thongbao").val().trim();
+    if (!noidung) return;
+
+    const now = new Date();
+    const format =
+      now.getFullYear() +
+      "/" +
+      String(now.getMonth() + 1).padStart(2, "0") +
+      "/" +
+      String(now.getDate()).padStart(2, "0") +
+      " " +
+      String(now.getHours()).padStart(2, "0") +
+      ":" +
+      String(now.getMinutes()).padStart(2, "0") +
+      ":" +
+      String(now.getSeconds()).padStart(2, "0");
+    console.log(manhom)
+    if (!manhom) {
+      Dashmix.helpers("jq-notify", {
+        type: "warning",
+        icon: "fa fa-exclamation-triangle me-1",
+        message: "Không xác định được nhóm để gửi thông báo!",
+      });
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "./teacher_announcement/sendAnnouncement",
+      data: {
+        noticeText: noidung,
+        manhom: manhom,
+        thoigiantao: format,
+      },
+      dataType: "json",
+      success: function (response) {
+        if (response) {
+          Dashmix.helpers("jq-notify", {
+            type: "success",
+            icon: "fa fa-check me-1",
+            message: "Thông báo đã được gửi!",
+          });
+          $("#input-thongbao").val("");
+        } else {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Gửi thông báo không thành công!",
+          });
+        }
+      },
+    });
   });
 
   function addExcel(data, password) {

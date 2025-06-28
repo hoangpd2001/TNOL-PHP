@@ -17,7 +17,7 @@
                                 <li><a class="dropdown-item filtered-by-role" href="javascript:void(0)" data-id="0">Tất cả</a></li>
                                 <?php
                                 foreach ($data["Roles"] as $role) {
-                                    echo '<li><a class="dropdown-item filtered-by-role" href="javascript:void(0)" data-id="' . $role['manhomquyen'] . '">' . $role['tennhomquyen'] . '</a></li>';
+                                    if ($role['manhomquyen'] != 11)echo '<li><a class="dropdown-item filtered-by-role" href="javascript:void(0)" data-id="' . $role['manhomquyen'] . '">' . $role['tennhomquyen'] . '</a></li>';
                                 }
                                 ?>
                             </ul>

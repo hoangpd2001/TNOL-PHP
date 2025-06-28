@@ -19,7 +19,8 @@ class DeThiModel extends DB
         $socautb,
         $socaukho,
         $chuong,
-        $trangthai
+        $trangthai,
+        $dethimau
     ) {
         $sql = "INSERT INTO `dethi`(`monthi`, `nguoitao`, `tende`, `thoigianthi`, 
          `hienthibailam`, `xemdiemthi`, `xemdapan`, 
@@ -33,7 +34,10 @@ class DeThiModel extends DB
             // Một đề thi giao cho nhiều nhóm
             // $result = $this->create_giaodethi($madethi);
             // Một đề thi thì có nhiều chương
-            //   $result = $this->create_chuongdethi($madethi, $chuong);
+               if($loaide ==1){
+                $result = $this->create_chuongdethi($madethi, $chuong);}
+            if ($loaide == 2) {
+                $result = $this->create_detthimau($madethi, $dethimau);}
             return $madethi;
         } else return false;
     }
@@ -42,9 +46,9 @@ class DeThiModel extends DB
     public function create_dethi_auto($made, $monhoc, $chuong, $socaude, $socautb, $socaukho)
     {
         $valid = true;
-        $sql_caude = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where ch.mamonhoc = $monhoc and ch.dokho = 1 and ";
-        $sql_cautb = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where ch.mamonhoc = $monhoc and ch.dokho = 2 and ";
-        $sql_caukho = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where ch.mamonhoc = $monhoc and ch.dokho = 3 and ";
+        $sql_caude = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where (ch.trangthai=1 or ch.trangthai=2) and ch.mamonhoc = $monhoc and ch.dokho = 1 and ";
+        $sql_cautb = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where (ch.trangthai=1 or ch.trangthai=2) and ch.mamonhoc = $monhoc and ch.dokho = 2 and ";
+        $sql_caukho = "SELECT * FROM cauhoi ch join monhoc mh on ch.mamonhoc = mh.mamonhoc where (ch.trangthai=1 or ch.trangthai=2) and ch.mamonhoc = $monhoc and ch.dokho = 3 and ";
         $countChuong = count($chuong) - 1;
         $detailChuong = "(";
         $i = 0;
@@ -76,6 +80,66 @@ class DeThiModel extends DB
         shuffle($data_cd);
         return $data_cd;
     }
+    public function create_dethi_from_template($made, $listMade)
+    {
+        if (count($listMade) == 0) return [];
+
+        // Lấy thông tin cấu trúc đề từ đề mẫu đầu tiên
+        $madeMau = $listMade[0];
+        $sql_cauhinh = "SELECT socaude, socautb, socaukho FROM dethi WHERE made = '$madeMau'";
+        $result_cauhinh = mysqli_query($this->con, $sql_cauhinh);
+        $cauhinh = mysqli_fetch_assoc($result_cauhinh);
+
+        $socaude = (int)$cauhinh['socaude'];
+        $socautb = (int)$cauhinh['socautb'];
+        $socaukho = (int)$cauhinh['socaukho'];
+
+        // Tạo chuỗi danh sách mã đề mẫu: (made = 101 OR made = 102 ...)
+        $countMade = count($listMade) - 1;
+        $detailMade = "(";
+        for ($i = 0; $i < $countMade; $i++) {
+            $detailMade .= "chitietdethi.made = '$listMade[$i]' OR ";
+        }
+        $detailMade .= "chitietdethi.made = '$listMade[$countMade]')";
+
+        // Câu dễ
+        $sql_caude = "SELECT cauhoi.* FROM cauhoi 
+            JOIN chitietdethi ON cauhoi.macauhoi = chitietdethi.macauhoi 
+            WHERE cauhoi.dokho = 1 AND $detailMade 
+            ORDER BY RAND() LIMIT $socaude";
+
+        // Câu TB
+        $sql_cautb = "SELECT cauhoi.* FROM cauhoi 
+            JOIN chitietdethi ON cauhoi.macauhoi = chitietdethi.macauhoi 
+            WHERE cauhoi.dokho = 2 AND $detailMade 
+            ORDER BY RAND() LIMIT $socautb";
+
+        // Câu khó
+        $sql_caukho = "SELECT cauhoi.* FROM cauhoi 
+            JOIN chitietdethi ON cauhoi.macauhoi = chitietdethi.macauhoi 
+            WHERE cauhoi.dokho = 3 AND $detailMade 
+            ORDER BY RAND() LIMIT $socaukho";
+
+        $data_all = [];
+
+        $result_cd = mysqli_query($this->con, $sql_caude);
+        $result_tb = mysqli_query($this->con, $sql_cautb);
+        $result_ck = mysqli_query($this->con, $sql_caukho);
+
+        while ($row = mysqli_fetch_assoc($result_cd)) {
+            $data_all[] = $row;
+        }
+        while ($row = mysqli_fetch_assoc($result_tb)) {
+            $data_all[] = $row;
+        }
+        while ($row = mysqli_fetch_assoc($result_ck)) {
+            $data_all[] = $row;
+        }
+
+        shuffle($data_all);
+        return $data_all;
+    }
+
 
     public function create_chuongdethi($made, $chuong)
     {
@@ -87,7 +151,16 @@ class DeThiModel extends DB
         }
         return $valid;
     }
-
+    public function create_detthimau($made, $dethimau)
+    {
+        $valid = true;
+        foreach ($dethimau as $mau) {
+            $sql = "INSERT INTO `dethimau`(`made`, `mademau`) VALUES ('$made','$mau')";
+            $result = mysqli_query($this->con, $sql);
+            if (!$result) $valid = false;
+        }
+        return $valid;
+    }
     public function update_chuongdethi($made, $chuong)
     {
         $valid = true;
@@ -197,7 +270,23 @@ class DeThiModel extends DB
         }
         return $rows;
     }
+    public function getAllTestByUserAndSubject($user_id, $mamonhoc){
+        $nguoiDungModel = new NguoiDungModel();
+        $check = $nguoiDungModel->checkAdmin($user_id);
+        $user = $check ? " " : " AND nguoitao = '" . $user_id . "' ";
+        $sql_dethi = "SELECT dethi.* 
+        FROM dethi 
+        WHERE dethi.monthi = '$mamonhoc' 
+        $user
+        AND dethi.loaide = 0;";
+        $result_dethi = mysqli_query($this->con, $sql_dethi);
 
+        $dethis = [];
+        while ($row = mysqli_fetch_assoc($result_dethi)) {
+            $dethis[] = $row;
+        }
+        return $dethis;
+    }
     // Lấy chi tiết đề thi
     public function getById($made)
     {
@@ -383,8 +472,10 @@ class DeThiModel extends DB
         $question = array();
         if ($data_dethi['loaide'] == 0) {
             $question = $this->getQuestionOfTestManual($made);
-        } else {
+        } else if($data_dethi['loaide'] == 1){
             $question = $this->getQuestionTestAuto($made);
+        }else if($data_dethi['loaide'] == 2){
+            $question = $this->getQuestionFromBaseTest($made);
         }
         $makq = $this->getMaDe($made, $user_id, $loaigiao, $manguongiao);
         foreach ($question as $data) {
@@ -441,6 +532,76 @@ class DeThiModel extends DB
         }
         return $rows;
     }
+    public function getQuestionFromBaseTest($made)
+    {
+        // B1: Lấy thông tin cấu trúc đề từ mã đề đầu vào
+        $sql_dethi = "SELECT socaude, socautb, socaukho FROM dethi WHERE made = '$made'";
+        $data_dethi = mysqli_fetch_assoc(mysqli_query($this->con, $sql_dethi));
+
+        $socaude = (int)$data_dethi['socaude'];
+        $socautb = (int)$data_dethi['socautb'];
+        $socaukho = (int)$data_dethi['socaukho'];
+
+        // B2: Lấy danh sách đề mẫu từ bảng trung gian dethimau
+        $sql_mau = "SELECT mademau FROM dethimau WHERE made = '$made'";
+        $result_mau = mysqli_query($this->con, $sql_mau);
+
+        $listMade = [];
+        while ($row = mysqli_fetch_assoc($result_mau)) {
+            $listMade[] = $row['mademau'];
+        }
+
+        if (count($listMade) == 0) return []; // Không có đề mẫu => return rỗng
+
+        $in_made = implode("','", $listMade);
+
+        // B3: Truy vấn từng nhóm độ khó từ các đề mẫu
+        $sql_cd = "SELECT ch.macauhoi, ch.noidung, ch.dokho
+               FROM chitietdethi ctd
+               JOIN cauhoi ch ON ch.macauhoi = ctd.macauhoi
+               WHERE ch.dokho = 1 AND ctd.made IN ('$in_made')
+               ORDER BY RAND() LIMIT $socaude";
+
+        $sql_ctb = "SELECT ch.macauhoi, ch.noidung, ch.dokho
+                FROM chitietdethi ctd
+                JOIN cauhoi ch ON ch.macauhoi = ctd.macauhoi
+                WHERE ch.dokho = 2 AND ctd.made IN ('$in_made')
+                ORDER BY RAND() LIMIT $socautb";
+
+        $sql_ck = "SELECT ch.macauhoi, ch.noidung, ch.dokho
+               FROM chitietdethi ctd
+               JOIN cauhoi ch ON ch.macauhoi = ctd.macauhoi
+               WHERE ch.dokho = 3 AND ctd.made IN ('$in_made')
+               ORDER BY RAND() LIMIT $socaukho";
+        $result_cd = mysqli_query($this->con, $sql_cd);
+        $result_tb = mysqli_query($this->con, $sql_ctb);
+        $result_ck = mysqli_query($this->con, $sql_ck);
+        // B4: Ghép kết quả lại
+        $result = array();
+        while ($row = mysqli_fetch_assoc($result_cd)) {
+            $result[] = $row;
+        }
+        while ($row = mysqli_fetch_assoc($result_tb)) {
+            $result[] = $row;
+        }
+        while ($row = mysqli_fetch_assoc($result_ck)) {
+            $result[] = $row;
+        }
+        shuffle($result);
+        $rows = array();
+
+        // B5: Lấy câu trả lời cho từng câu
+        $ctlmodel = new CauTraLoiModel();
+        $rows = [];
+
+        foreach ($result as $row) {
+            $row['cautraloi'] = $ctlmodel->getAllWithoutAnswer($row['macauhoi']);
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
     public function getQuestionByUser($made, $user)
     {
 
@@ -502,7 +663,7 @@ class DeThiModel extends DB
 
         return $rows;
     }
-
+ 
     // Lấy chi tiết đề thi của sinh viên
     public function getResultDetail($makq)
     {
@@ -950,7 +1111,7 @@ class DeThiModel extends DB
                     //  $query .= " GROUP BY DT.made ORDER BY DT.made DESC";
                     break;
                 case "getQuestionsForTest":
-                    $query = "SELECT cauhoi.*, fnStripTags(noidung) AS noidungplaintext FROM cauhoi , chuong WHERE cauhoi.machuong = chuong.machuong AND cauhoi.trangthai = 1 AND chuong.mamonhoc = '" . $args['mamonhoc'] . "'";
+                    $query = "SELECT cauhoi.*, fnStripTags(noidung) AS noidungplaintext FROM cauhoi , chuong WHERE cauhoi.machuong = chuong.machuong AND (cauhoi.trangthai = 1 or cauhoi.trangthai = 2) AND chuong.mamonhoc = '" . $args['mamonhoc'] . "'";
                     if (isset($filter['machuong'])) {
                         $query .= " AND chuong.machuong = " . $filter['machuong'];
                     }

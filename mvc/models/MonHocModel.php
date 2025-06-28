@@ -38,7 +38,18 @@ class MonHocModel extends DB
         }
         return $rows;
     }
-
+    public function getAllbyUser($id)
+    {
+        $sql = "select monhoc.* from sinhvien, lop, hocphan, monhoc where 
+        sinhvien.malop = lop.malop and hocphan.malop = lop.malop and 
+        hocphan.mamonhoc= monhoc.mamonhoc and sinhvien.id= '$id' and hocphan.trangthai = 1";
+        $result = mysqli_query($this->con, $sql);
+        $rows = array();
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    }
     public function getById($id)
     {
         $sql = "SELECT * FROM `monhoc` WHERE `mamonhoc` = '$id'";

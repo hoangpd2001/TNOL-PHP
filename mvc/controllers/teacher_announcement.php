@@ -1,19 +1,27 @@
 <?php
 
-class teacher_announcement extends Controller{
+class teacher_announcement extends Controller
+{
     public $AnnouncementModel;
-
+    public $mailAuthmodel;
+    public $nhomModel;
+    public $nguoidungModel;
+    public $hocPhanModel;
     public function __construct()
     {
         $this->AnnouncementModel = $this->model("AnnouncementModel");
+        $this->mailAuthmodel = $this->model("MailAuth");
+        $this->nhomModel = $this->model("NhomModel");
+        $this->hocPhanModel = $this->model("HocPhanModel");
+        $this->nguoidungModel = $this->model("NguoiDungModel");
         parent::__construct();
         require_once "./mvc/core/Pagination.php";
     }
-    
+
     public function default()
     {
-        if(AuthCore::checkPermission("thongbao","view")) {
-            $this->view("main_layout",[
+        if (AuthCore::checkPermission("thongbao", "view")) {
+            $this->view("main_layout", [
                 "Page" => "teacher_announcement",
                 "Title" => "Thông báo",
                 "Script" => "announcement",
@@ -27,13 +35,13 @@ class teacher_announcement extends Controller{
                     "pagination" => [],
                 ]
             ]);
-        } else $this->view("single_layout", ["Page" => "error/page_403","Title" => "Lỗi !"]);
+        } else $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
     }
 
     public function add()
     {
-        if(AuthCore::checkPermission("thongbao","create")) {
-            $this->view("main_layout",[
+        if (AuthCore::checkPermission("thongbao", "create")) {
+            $this->view("main_layout", [
                 "Page" => "add_announce",
                 "Title" => "Tạo và gửi thông báo",
                 "Script" => "announcement",
@@ -47,14 +55,14 @@ class teacher_announcement extends Controller{
                 ],
                 "Action" => "create"
             ]);
-        } else $this->view("single_layout", ["Page" => "error/page_403","Title" => "Lỗi !"]);
+        } else $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
     }
 
     public function update($matb)
     {
         $check = $this->AnnouncementModel->getById($matb);
         if (isset($check)) {
-            if($check['nguoitao'] == $_SESSION['user_id'] && AuthCore::checkPermission("thongbao", "update")){
+            if ($check['nguoitao'] == $_SESSION['user_id'] && AuthCore::checkPermission("thongbao", "update")) {
                 $this->view("main_layout", [
                     "Page" => "add_announce",
                     "Title" => "Cập nhật thông báo",
@@ -76,16 +84,37 @@ class teacher_announcement extends Controller{
             $this->view("single_layout", ["Page" => "error/page_404", "Title" => "Lỗi !"]);
         }
     }
-    
+
     public function sendAnnouncement()
     {
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("thongbao", "create")) {
-            $mamonhoc = $_POST['mamonhoc'];
             $nguoitao = $_SESSION['user_id'];
-            $manhom = $_POST['manhom'];
+            $manhoms = $_POST['manhom'];
             $content = $_POST['noticeText'];
             $thoigiantao = $_POST['thoigiantao'];
-            $valid = $this->AnnouncementModel->create($mamonhoc,$thoigiantao,$nguoitao,$manhom,$content);
+            $loaigiao = $_POST['loaigiao'];
+            $valid = $this->AnnouncementModel->create($thoigiantao, $nguoitao, $manhoms, $content, $loaigiao);
+            // Gom toàn bộ nhân sự & nhóm
+            $user = $this->nguoidungModel->getById($nguoitao);
+            foreach ($manhoms as $manhom) {
+                // Ép về integer
+                $manhom = (int)$manhom;
+                if ($loaigiao == "1") {
+                    $group = $this->hocPhanModel->getDetailGroup($manhom);
+                    $students = $this->hocPhanModel->getSvList($manhom);
+                } else {
+                    $group = $this->nhomModel->getDetailGroup($manhom);
+                    $students = $this->nhomModel->getSvList($manhom);
+                }
+                $this->mailAuthmodel->sendAnnouncement(
+                    $content,                 
+                    $thoigiantao,                    
+                    $loaigiao,
+                    $group,
+                    $students,
+                    $user,
+                );
+            }
             echo $valid;
         }
     }
@@ -95,7 +124,8 @@ class teacher_announcement extends Controller{
         AuthCore::checkAuthentication();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $manhom = $_POST["manhom"];
-            $result = $this->AnnouncementModel->getAnnounce($manhom);
+            $loaigiao = $_POST["loaigiao"];
+            $result = $this->AnnouncementModel->getAnnounce($manhom, $loaigiao);
             echo json_encode($result);
         }
     }
@@ -135,7 +165,7 @@ class teacher_announcement extends Controller{
             $matb = $_POST["matb"];
             $noidung = $_POST["noidung"];
             $manhom = $_POST["manhom"];
-            $result = $this->AnnouncementModel->updateAnnounce($matb,$noidung,$manhom);
+            $result = $this->AnnouncementModel->updateAnnounce($matb, $noidung, $manhom);
             echo json_encode($result);
         }
     }

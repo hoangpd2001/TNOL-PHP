@@ -85,15 +85,7 @@ const showData = function (students) {
                   </td>
               </tr>
           `;
-          fetch(`./User_Online/isUserOnline.php?id=${id}`)
-            .then((res) => res.json())
-            .then((res) => {
-              if (res.online) {
-                $(`tr[data-student-id="${id}"] .user-name`).append(
-                  ' <i class="fa fa-circle text-success ms-1" title="Online"></i>'
-                );
-              }
-            });
+
     });
   }
   $("#list-student").html(html);
@@ -206,15 +198,17 @@ $(document).ready(function () {
     $(".list-test").html(html);
   }
 
-  function loadDataAnnounce(mahocphan) {
+  function loadDataAnnounce(manhom) {
     $.ajax({
       type: "post",
       url: "./teacher_announcement/getAnnounce",
       data: {
-        mahocphan: mahocphan,
+        manhom: manhom,
+        loaigiao:1,
       },
       dataType: "json",
       success: function (response) {
+        console.log(response);
         showAnnouncement(response);
       },
     });

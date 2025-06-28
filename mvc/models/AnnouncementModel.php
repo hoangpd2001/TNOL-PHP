@@ -2,14 +2,14 @@
 class AnnouncementModel extends DB 
 {
     
-    public function create($mamonhoc,$thoigiantao,$nguoitao,$nhom,$content)
+    public function create($thoigiantao,$nguoitao,$nhom,$content, $loaigiao)
     {
         $sql = "INSERT INTO `thongbao`(`noidung`,`thoigiantao`,`nguoitao`) VALUES ('$content','$thoigiantao','$nguoitao')";
         $result = mysqli_query($this->con, $sql);
         if($result) {
             $matb = mysqli_insert_id($this->con);
             // Một thông báo gửi cho nhiều nhóm 
-            $result = $this->sendAnnouncement($matb, $nhom);
+            $result = $this->sendAnnouncement($matb, $nhom, $loaigiao);
             return $matb;
         } else return false;
     }
@@ -20,25 +20,39 @@ class AnnouncementModel extends DB
         return mysqli_fetch_assoc($result);
     }
 
-    public function sendAnnouncement($matb,$nhom)
+    public function sendAnnouncement($matb,$nhom, $loaigiao)
     {
         $valid = true;
         foreach ($nhom as $manhom) {
-            $sql = "INSERT INTO `chitietthongbao`(`matb`, `manhom`) VALUES ('$matb','$manhom')";
+            $sql = "INSERT INTO `chitietthongbao`(`matb`, `manguongiao`, `loaigiao`) VALUES ('$matb','$manhom', '$loaigiao')";
             $result = mysqli_query($this->con, $sql);
             if (!$result) $valid = false;
         }
         return $valid;
     }
 
-    public function getAnnounce($manhom) {
-        $sql = "SELECT DISTINCT `thongbao`.`matb`, `noidung`, `avatar` ,`thoigiantao`
-        FROM `thongbao`,`chitietthongbao`,`chitietnhom`,`nguoidung` 
-        WHERE `thongbao`.`matb` = `chitietthongbao`.`matb` AND `chitietthongbao`.`manhom` = `chitietnhom`.`manhom` AND `nguoitao` = `id`
-        AND `chitietthongbao`.`manhom` = $manhom ORDER BY thoigiantao DESC";
-        $result = mysqli_query($this->con,$sql);
-        $rows = array();
-        while($row = mysqli_fetch_assoc($result)){
+    public function getAnnounce($manhom, $loaigiao)
+    {
+        $manhom = (int)$manhom;
+
+
+        $sql = "
+            SELECT
+                tb.matb,
+                tb.noidung,
+                MAX(u.avatar) AS avatar,
+                MAX(u.hoten) AS hoten,
+                MAX(tb.thoigiantao) AS thoigiantao
+            FROM thongbao tb
+            JOIN chitietthongbao ctp ON ctp.matb = tb.matb AND ctp.manguongiao = $manhom AND ctp.loaigiao=$loaigiao
+            JOIN nguoidung u ON tb.nguoitao = u.id
+            GROUP BY tb.matb, tb.noidung
+            ORDER BY thoigiantao DESC;
+        ";
+
+        $result = mysqli_query($this->con, $sql);
+        $rows = [];
+        while ($row = mysqli_fetch_assoc($result)) {
             $rows[] = $row;
         }
         return $rows;
@@ -113,14 +127,14 @@ class AnnouncementModel extends DB
         return $thongbao;
     }
 
-    public function updateAnnounce($matb,$noidung,$nhom)
+    public function updateAnnounce($matb,$noidung,$nhom,$loaigiao)
     {
         $valid = true;
         $sql = "UPDATE `thongbao` SET `noidung`='$noidung' WHERE `matb` = $matb" ;
         $result = mysqli_query($this->con, $sql);
         if($result) {
             $this->deleteDetailAnnounce($matb);
-            $this->sendAnnouncement($matb, $nhom);
+            $this->sendAnnouncement($matb, $nhom, $loaigiao);
         } else $valid = false;
         return $valid; 
     }
@@ -143,11 +157,33 @@ class AnnouncementModel extends DB
         return $rows;
     }
 
-    public function getQuery($filter, $input, $args) {
-        $query = "SELECT TB.*, tenmonhoc, namhoc, hocky, GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom FROM thongbao TB, chitietthongbao CTTB, nhom N, monhoc MH WHERE TB.matb = CTTB.matb AND CTTB.manhom = N.manhom AND N.mamonhoc = MH.mamonhoc AND TB.nguoitao = ".$args['id'];
+    public function getQuery($filter, $input, $args)
+    {
+        $query = "";
+        $state = $filter;
+        if($state == 0){
+            $query = "SELECT TB.*, namhoc, hocky, GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom
+            FROM thongbao TB
+            JOIN chitietthongbao CTTB ON TB.matb = CTTB.matb
+            JOIN nhom N ON CTTB.manguongiao = N.manhom
+            WHERE TB.nguoitao = '" . $args['id'] . "' AND CTTB.loaigiao = 0";
+        }else{
+            $query = "SELECT TB.*, tennganh AS namhoc ,tenkhoahoc AS hocky, 
+                GROUP_CONCAT(L.tenlop SEPARATOR ', ') AS nhom
+            FROM thongbao TB
+            JOIN chitietthongbao CTTB ON TB.matb = CTTB.matb
+            JOIN hocphan N ON CTTB.manguongiao = N.mahocphan
+            JOIN lop L ON N.malop = L.malop
+            JOIN khoahoc KH ON KH.makhoahoc = L.makhoahoc
+            JOIN nganh NH ON NH.manganh = L.manganh
+            WHERE TB.nguoitao = '" . $args['id'] . "' AND CTTB.loaigiao = 1" ;
+        }
+        
+
         if ($input) {
             $query .= " AND noidung LIKE N'%${input}%'";
         }
+
         $query .= " GROUP BY TB.matb ORDER BY thoigiantao DESC";
         return $query;
     }

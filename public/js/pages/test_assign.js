@@ -366,22 +366,23 @@ $(document).ready(function () {
             console.log(response);
             if (response) {
               Dashmix.helpers("jq-notify", {
-                type: "danger",
+                type: "success",
                 icon: "fa fa-times me-1",
-                message: "Tạo đề  thành công!",
+                message: "Giao đề thành công!",
               });
+              location.href = "./test/review"; 
             } else {
               Dashmix.helpers("jq-notify", {
                 type: "danger",
                 icon: "fa fa-times me-1",
-                message: "Tạo đề thi không thành công!",
+                message: "Đề này đã được giao trước đó rồi!",
               });
             }
           },
         });
       } else {
         Dashmix.helpers("jq-notify", {
-          type: "danger",
+          type: "success",
           icon: "fa fa-times me-1",
           message: "Bạn phải chọn ít nhất một nhóm học phần!",
         });

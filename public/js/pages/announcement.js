@@ -33,6 +33,7 @@ let groups = [];
 
 function showListAnnounce(announces) {
     let html = "";
+    console.log(announces)
     if (announces.length != 0) {
         announces.forEach(announce => {
             html += `
@@ -44,7 +45,7 @@ function showListAnnounce(announces) {
                         <h4 class="fw-bold mb-2 truncate truncate--1">${announce.noidung}</h4>
                     </div>
                     <p class="fs-sm text-muted mb-2">
-                        <i class="fa fa-layer-group me-1"></i> Gửi cho học phần <strong data-bs-toggle="tooltip" data-bs-animation="true" data-bs-placement="top" style="cursor:pointer" data-bs-original-title="${announce.nhom}">${announce.tenmonhoc} - NH${announce.namhoc} - HK${announce.hocky}</strong>
+                        <i class="fa fa-layer-group me-1"></i> Gửi cho học phần <strong data-bs-toggle="tooltip" data-bs-animation="true" data-bs-placement="top" style="cursor:pointer" data-bs-original-title="${announce.nhom}">${announce.nhom} - NH${announce.namhoc} - HK${announce.hocky}</strong>
                     </p>
                 </div>
                 <div class="p-1 p-md-3">
@@ -83,44 +84,107 @@ $(document).ready(function () {
             },
             dataType: "json",
             success: function (response) {
+                console.log("module", response);
                 groups = response;
                 response.forEach((item, index) => {
-                    html += `<option value="${index}">${item.mamonhoc + " - " + item.tenmonhoc + " - NH" + item.namhoc + " - HK" + item.hocky}</option>`;
+                    html += `<option value="${index}">${item.hoten +  " - NH" + item.namhoc + " - HK" + item.hocky}</option>`;
                 });
                 $("#nhom-hp").html(html);
             }
         });
     }
-
+    function showModule() {
+        console.log("load module")
+      let html = "<option></option>";
+      $.ajax({
+        type: "post",
+        url: "./classmodule/loadData",
+        async: false,
+        data: {
+          hienthi: 1,
+        },
+        dataType: "json",
+        success: function (response) {
+            console.log("classmodule", response);
+          groups = response;
+          response.forEach((item, index) => {
+            html += `<option value="${index}">${
+              item.mamonhoc +
+              " - " +
+              item.tenmonhoc +
+              " - " +
+              item.tennganh +
+              " - " +
+              item.tenkhoahoc
+            }</option>`;
+          });
+          $("#nhom-hp").html(html);
+        },
+      });
+    }
     showGroup();
 
 
-    function showListGroup(index) {
+    function showListGroup(index, loai) {
         let html = ``;
+       if(loai==0){
         if (groups[index].nhom.length > 0) {
-            html += `<div class="col-12 mb-3">
+          html += `<div class="col-12 mb-3">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="select-all-group">
                 <label class="form-check-label" for="select-all-group">Chọn tất cả</label>
-            </div></div>`
-            groups[index].nhom.forEach(item => {
-                html += `<div class="col-4">
+            </div></div>`;
+          groups[index].nhom.forEach((item) => {
+            html += `<div class="col-4">
                     <div class="form-check">
                         <input class="form-check-input select-group-item" type="checkbox" value="${item.manhom}"
                             id="nhom-${item.manhom}" name="nhom-${item.manhom}">
                         <label class="form-check-label" for="nhom-${item.manhom}">${item.tennhom}</label>
                     </div>
-                </div>`
-            });
+                </div>`;
+          });
         } else {
-            html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
+          html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
         }
+       }else{
+        if (groups[index].lop.length > 0) {
+          html += `<div class="col-12 mb-3">
+              <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="select-all-group">
+                  <label class="form-check-label" for="select-all-group">Chọn tất cả</label>
+              </div></div>`;
+          groups[index].lop.forEach((item) => {
+            html += `<div class="col-4">
+                      <div class="form-check">
+                          <input class="form-check-input select-group-item" type="checkbox" value="${item.mahocphan}"
+                              id="nhom-${item.mahocphan}" name="nhom-${item.mahocphan}">
+                          <label class="form-check-label" for="nhom-${item.mahocphan}">${item.tenlop}</label>
+                      </div>
+                  </div>`;
+          });
+        } else {
+          html += `<div class="text-center fs-sm"><img style="width:100px" src="./public/media/svg/empty_data.png" alt=""></div>`;
+        }
+       }
         $("#list-group").html(html);
     }
+    $("input[name='loaigiao']").on("change", function () {
+      const type = $(this).val(); // 0 = nhóm, 1 = học phần
+      console.log("Đang chọn loại:", type === "0" ? "Nhóm" : "Học phần");
+     if(type == "0"){
 
+         $("#list-group").html("");
+        showGroup();        
+     }else{
+        $("#list-group").html("");
+        showModule();
+
+     }
+    });
     $("#nhom-hp").on("change", function () {
         let index = $(this).val();
-        showListGroup(index);
+        const type = $("input[name='loaigiao']:checked").val();
+        showListGroup(index,type);
     });
 
     $(document).on("click", "#select-all-group", function () {
@@ -140,6 +204,7 @@ $(document).ready(function () {
 
     $("#btn-send-announcement").click(function (e) {
         e.preventDefault();
+        const type = $("input[name='loaigiao']:checked").val();
         let nowDate = new Date();
         let nowYear = nowDate.getFullYear();
         let nowMonth = nowDate.getMonth() + 1;
@@ -150,6 +215,14 @@ $(document).ready(function () {
         let format = nowYear + "/" + nowMonth + "/" + nowDay + " " + nowHours + ":" + nowMintues + ":" + nowSeconds;
         if ($(".form-taothongbao").valid()) {
             if(getGroupSelected().length != 0) {
+                let data={
+                            noticeText: $("#name-exam").val(),
+                            mamonhoc: groups[$("#nhom-hp").val()].mamonhoc,
+                            manhom: getGroupSelected(),
+                            thoigiantao: format,
+                            loaigiao: type,
+                        }
+                console.log(data)
                 $.ajax({
                     type: "post",
                     url: "./teacher_announcement/sendAnnouncement",
@@ -158,9 +231,11 @@ $(document).ready(function () {
                         mamonhoc: groups[$("#nhom-hp").val()].mamonhoc,
                         manhom: getGroupSelected(),
                         thoigiantao: format,
+                        loaigiao: type,
                     },
                     dataType: "json",
                     success: function (response) {
+                        console.log(response)
                         if (response) {
                             location.href = "./teacher_announcement";
                         } else {
@@ -238,6 +313,18 @@ $(document).ready(function () {
             });
         });
     })
+    $(".filtered-by-state").click(function (e) {
+      e.preventDefault();
+      $(".btn-filtered-by-state").text($(this).text());
+      const state = $(this).data("value");
+        mainPagePagination.option.filter = state;
+
+
+      mainPagePagination.getPagination(
+        mainPagePagination.option,
+        mainPagePagination.valuePage.curPage
+      );
+    });
 
 });
 
@@ -250,5 +337,8 @@ delete container.dataset.id;
 const mainPagePagination = new Pagination(null, null, showListAnnounce);
 mainPagePagination.option.controller = "teacher_announcement";
 mainPagePagination.option.model = "AnnouncementModel";
+mainPagePagination.option.filter = 1;
 mainPagePagination.option.id = currentUser;
 mainPagePagination.getPagination(mainPagePagination.option, mainPagePagination.valuePage.curPage);
+
+

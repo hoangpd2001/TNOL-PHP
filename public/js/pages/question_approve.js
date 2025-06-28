@@ -10,10 +10,10 @@ Dashmix.onLoad(() =>
             "mon-hoc": {
               required: true,
             },
-            "chuong": {
+            chuong: {
               required: true,
             },
-            "dokho": {
+            dokho: {
               required: true,
             },
             "js-ckeditor": {
@@ -24,10 +24,10 @@ Dashmix.onLoad(() =>
             "mon-hoc": {
               required: "Vui lòng chọn môn học",
             },
-            "chuong": {
+            chuong: {
               required: "Vui lòng chọn chương.",
             },
-            "dokho": {
+            dokho: {
               required: "Vui lòng chọn mức độ.",
             },
             "js-ckeditor": {
@@ -48,6 +48,7 @@ function showData(data) {
   let html = "";
   let index = 1;
   let offset = (this.valuePage.curPage - 1) * this.option.limit;
+  console.log(data);
   data.forEach((question) => {
     let dokho = "";
     switch (question["dokho"]) {
@@ -76,11 +77,11 @@ function showData(data) {
               </td>
                 <td class="text-center">
                               <span class="fs-xs fw-semibold d-inline-block py-1 px-3 rounded-pill ${
-                                question.trangthai == 2
+                                question["trangthai"] == 1
                                   ? "bg-success-light text-success"
                                   : "bg-danger-light text-danger"
                               } bg-success-light text-success">${
-      question.trangthai == 2 ? "Công khai" : "Riêng tư"
+      question["trangthai"] == 1 ? "Public" : "Private"
     }</span>
                           </td> 
               <td class="text-center col-action">
@@ -109,19 +110,19 @@ $(document).ready(function () {
   $("#mon-hoc").select2({
     dropdownParent: $("#modal-add-question"),
   });
-  
+
   $("#chuong").select2({
     dropdownParent: $("#modal-add-question"),
   });
-  
+
   $("#dokho").select2({
     dropdownParent: $("#modal-add-question"),
   });
-  
+
   $("#monhocfile").select2({
     dropdownParent: $("#modal-add-question"),
   });
-  
+
   $("#chuongfile").select2({
     dropdownParent: $("#modal-add-question"),
   });
@@ -334,21 +335,13 @@ $(document).ready(function () {
       mainPagePagination.valuePage.curPage
     );
   });
-  $("#main-page-trangthai").on("change", function () {
-    const trangthai = +$(this).val();
-    mainPagePagination.option.filter.trangthai = trangthai;
-    mainPagePagination.getPagination(
-      mainPagePagination.option,
-      mainPagePagination.valuePage.curPage
-    );
-  });
-let questions = null;
+  let questions = null;
   $("#file-cau-hoi").change(function (e) {
     e.preventDefault();
     var file = $("#file-cau-hoi")[0].files[0];
     var formData = new FormData();
     formData.append("fileToUpload", file);
-    questions=null;
+    questions = null;
     $.ajax({
       type: "post",
       url: "./question/xulyDocx",
@@ -363,7 +356,7 @@ let questions = null;
         console.log(response);
         questions = response;
         renderPreview(response);
-       // loadDataQuestion(response);
+        // loadDataQuestion(response);
       },
       complete: function () {
         Dashmix.layout("header_loader_off");
@@ -373,35 +366,41 @@ let questions = null;
   function renderPreview() {
     const container = document.getElementById("import-preview-container");
     container.innerHTML = "";
-  
+
     questions.forEach((q, index) => {
       const questionContent = q.question || "<em>[Không có nội dung]</em>";
       const level = q.level || "1"; // default = 1
       const answerIndex = parseInt(q.answer) - 1;
-  
+
       const optionsHTML = (q.option || [])
         .map((opt, i) => {
           const isCorrect = i === answerIndex;
           return `
             <div class="input-group mb-2">
-              <span class="input-group-text">${String.fromCharCode(65 + i)}</span>
+              <span class="input-group-text">${String.fromCharCode(
+                65 + i
+              )}</span>
               <input type="text" class="form-control option-input"
                      name="option-${index}-${i}" data-question-index="${index}" data-option-index="${i}"
                      value="${opt}">
               <div class="input-group-text">
-                <input type="radio" name="correct-${index}" value="${i}" ${isCorrect ? "checked" : ""}>
+                <input type="radio" name="correct-${index}" value="${i}" ${
+            isCorrect ? "checked" : ""
+          }>
               </div>
             </div>
           `;
         })
         .join("");
-  
+
       const html = `
         <div class="mb-4 border p-3 rounded bg-light">
           <h6>Câu ${index + 1}:</h6>
           <div class="mb-2">
             <label><strong>Nội dung:</strong></label>
-            <textarea class="form-control question-input" name="question-${index}" data-index="${index}">${q.question}</textarea>
+            <textarea class="form-control question-input" name="question-${index}" data-index="${index}">${
+        q.question
+      }</textarea>
           </div>
           <div class="mb-2">
             <label><strong>Đáp án:</strong></label>
@@ -410,16 +409,22 @@ let questions = null;
           <div class="mb-2">
             <label><strong>Mức độ:</strong></label>
             <select class="form-select level-input" name="level-${index}" data-index="${index}">
-              <option value="1" ${level == "1" ? "selected" : ""}>Cơ bản</option>
-              <option value="2" ${level == "2" ? "selected" : ""}>Trung bình</option>
-              <option value="3" ${level == "3" ? "selected" : ""}>Nâng cao</option>
+              <option value="1" ${
+                level == "1" ? "selected" : ""
+              }>Cơ bản</option>
+              <option value="2" ${
+                level == "2" ? "selected" : ""
+              }>Trung bình</option>
+              <option value="3" ${
+                level == "3" ? "selected" : ""
+              }>Nâng cao</option>
             </select>
           </div>
         </div>
       `;
       container.innerHTML += html;
     });
-  
+
     // Auto update logic
     container.querySelectorAll(".question-input").forEach((el) => {
       el.addEventListener("input", (e) => {
@@ -427,14 +432,14 @@ let questions = null;
         questions[idx].question = e.target.value.trim();
       });
     });
-  
+
     container.querySelectorAll(".level-input").forEach((el) => {
       el.addEventListener("change", (e) => {
         const idx = +e.target.dataset.index;
         questions[idx].level = e.target.value;
       });
     });
-  
+
     container.querySelectorAll(".option-input").forEach((el) => {
       el.addEventListener("input", (e) => {
         const qIdx = +e.target.dataset.questionIndex;
@@ -442,7 +447,7 @@ let questions = null;
         questions[qIdx].option[oIdx] = e.target.value.trim();
       });
     });
-  
+
     container.querySelectorAll("input[type=radio]").forEach((el) => {
       el.addEventListener("change", (e) => {
         const name = e.target.name; // ex: correct-0
@@ -450,8 +455,7 @@ let questions = null;
         questions[qIdx].answer = parseInt(e.target.value) + 1; // still 1-based
       });
     });
-  
-  
+
     // Show modal
     const modal = new bootstrap.Modal(
       document.getElementById("modal-preview-import")
@@ -459,123 +463,8 @@ let questions = null;
     modal.show();
   }
 
-  $("#btnAddExcel").click(function (e) {
-    e.preventDefault();
-    var file = $("#file-cau-hoi")[0].files[0];
-    var formData = new FormData();
-    formData.append("fileToUpload", file);
-    $.ajax({
-      type: "post",
-      url: "./question/addExcel",
-      data: formData,
-      contentType: false,
-      processData: false,
-      dataType: "json",
-      beforeSend: function () {
-        Dashmix.layout("header_loader_on");
-      },
-      success: function (response) {
-        console.log(response);
-        questions = response;
-        loadDataQuestion(response);
-      },
-      complete: function () {
-        Dashmix.layout("header_loader_off");
-      },
-    });
-  });
 
-  function loadDataQuestion(questions) {
-    let data = ``;
-    questions.forEach((item, index) => {
-      data += `<div class="question rounded border mb-3">
-            <div class="question-top p-3">
-                <p class="question-content fw-bold mb-3">${index + 1}. ${
-        item.question
-      } </p>
-                <div class="row">`;
-      item.option.forEach((op, i) => {
-        data += `<div class="col-6 mb-1">
-                <p class="mb-1"><b>${String.fromCharCode(
-                  i + 65
-                )}.</b> ${op}</p></div>`;
-      });
-      data += `</div></div>`;
-      data += `<div class="test-ans bg-primary rounded-bottom py-2 px-3 d-flex align-items-center"><p class="mb-0 text-white me-4">Đáp án của bạn:</p>`;
-      item.option.forEach((op, i) => {
-        data += `<input type="radio" class="btn-check" name="options-c${index}" id="option-c${index}_${i}" autocomplete="off" ${
-          i + 1 == item.answer ? `checked` : ``
-        } disabled>
-                <label class="btn btn-light rounded-pill me-2 btn-answer" for="option-c${index}_${i}">${String.fromCharCode(
-          i + 65
-        )}</label>`;
-      });
-      data += `</div></div>`;
-    });
-    $("#content-file").html(data);
-  }
 
-  // loadQuestion();
-
-  //add question
-  $("#add_question").click(function (e) {
-    if ($("#form_add_question").valid()) {
-      let ch = CKEDITOR.instances["js-ckeditor"].getData().length==0;
-      if(ch==""){
-        if (options.length == 0) {
-          Dashmix.helpers("jq-notify", {
-            type: "danger",
-            icon: "fa fa-times me-1",
-            message: "Vui lòng thêm câu trả lời!",
-          });
-        } else {
-          if (!checkSOption(options)) {
-            Dashmix.helpers("jq-notify", {
-              type: "danger",
-              icon: "fa fa-times me-1",
-              message: "Vui lòng chọn câu trả lời đúng!",
-            });
-          } else {
-            let mamonhoc = $("#mon-hoc").val();
-            let machuong = $("#chuong").val();
-            let dokho = $("#dokho").val();
-            let noidung = CKEDITOR.instances["js-ckeditor"].getData();
-            $.ajax({
-              type: "post",
-              url: "./question/addQues",
-              data: {
-                mamon: mamonhoc,
-                machuong: machuong,
-                dokho: dokho,
-                noidung: noidung,
-                cautraloi: options,
-              },
-              success: function (response) {
-                Dashmix.helpers("jq-notify", {
-                  type: "success",
-                  icon: "fa fa-check me-1",
-                  message: "Tạo câu hỏi thành công!",
-                });
-  
-                $("#modal-add-question").modal("hide");
-                // loadQuestion();
-                mainPagePagination.getPagination(
-                  mainPagePagination.option,
-                  mainPagePagination.valuePage.curPage
-                );
-              },
-            });
-          }
-        }
-      } else {
-        Dashmix.helpers("jq-notify", {
-          type: "danger",
-          icon: "fa fa-times me-1",
-          message: "Vui lòng không để trống câu hỏi",
-        });
-      }
-    }
-  });
 
   function checkSOption(options) {
     let check = false;
@@ -604,35 +493,6 @@ let questions = null;
     $("#content-file").html("");
   });
 
-  $("#confirm-import").click(function () {
-    $.ajax({
-      type: "post",
-      url: "./question/addQuesFile",
-      data: {
-        monhoc: $("#monhocfile").val(),
-        chuong: $("#chuongfile").val(),
-        questions: questions,
-      },
-      success: function (response) {
-        $("#modal-add-question").modal("hide");
-        $("#modal-preview-import").modal("hide");
-        //loadQuestion();
-        renderPreview(response);
-        mainPagePagination.getPagination(
-          mainPagePagination.option,
-          mainPagePagination.valuePage.curPage
-        );
-        setTimeout(function () {
-          Dashmix.helpers("jq-notify", {
-            type: "success",
-            icon: "fa fa-check me-1",
-            message: "Thêm câu hỏi từ file thành công!",
-          });
-        }, 10);
-      },
-    });
-  });
-
   $(document).on("click", ".btn-edit-question", function () {
     $("#add_question").hide();
     $("#edit_question").show();
@@ -648,18 +508,17 @@ let questions = null;
     let dokho = $("#dokho").val();
     let noidung = CKEDITOR.instances["js-ckeditor"].getData();
     let cautraloi = options;
-    let trangthai = $("#question-status").val();
     let id = $("#question_id").val();
-    let data2 ={
+    let data2 = {
       id: id,
       mamon: mamonhoc,
       machuong: machuong,
       dokho: dokho,
       noidung: noidung,
       cautraloi: options,
-      trangthai: trangthai,
-    }
-    console.log("data",data2);
+      trangthai:1
+    };
+    console.log("data", data2);
     if (
       mamonhoc != "" &&
       machuong != "" &&
@@ -678,7 +537,7 @@ let questions = null;
           dokho: dokho,
           noidung: noidung,
           cautraloi: options,
-          trangthai:trangthai
+          trangthai: $("#question-status").val()
         },
         success: function (response) {
           Dashmix.helpers("jq-notify", {
@@ -758,11 +617,9 @@ let questions = null;
         let machuong = data["machuong"];
         let dokho = data["dokho"];
         let noidung = data["noidung"];
-        let trangthai = data["trangthai"];
         CKEDITOR.instances["js-ckeditor"].setData(noidung);
         $("#mon-hoc").val(monhoc).trigger("change");
         $("#dokho").val(dokho).trigger("change");
-        $("#question-status").val(trangthai).trigger("change");
         setTimeout(function () {
           $("#chuong").val(machuong).trigger("change");
         }, 200);
@@ -791,54 +648,60 @@ let questions = null;
     });
   }
 
-  $(document).on("click", ".btn-delete-question", function () {
-    let trid = $(this).data("id");
-    let e = Swal.mixin({
-      buttonsStyling: !1,
-      target: "#page-container",
-      customClass: {
-        confirmButton: "btn btn-success m-1",
-        cancelButton: "btn btn-danger m-1",
-        input: "form-control",
-      },
-    });
+  $(document).on(
+    "click",
+    ".btn-delete-question",
+    "#delete_question",
+    function () {
+      let trid = $(this).data("id");
+      console.log(trid);
+      let e = Swal.mixin({
+        buttonsStyling: !1,
+        target: "#page-container",
+        customClass: {
+          confirmButton: "btn btn-success m-1",
+          cancelButton: "btn btn-danger m-1",
+          input: "form-control",
+        },
+      });
 
-    e.fire({
-      title: "Are you sure?",
-      text: "Bạn có chắc chắn muốn xoá câu hỏi này?",
-      icon: "warning",
-      showCancelButton: !0,
-      customClass: {
-        confirmButton: "btn btn-danger m-1",
-        cancelButton: "btn btn-secondary m-1",
-      },
-      confirmButtonText: "Vâng, tôi chắc chắn!",
-      html: !1,
-      preConfirm: (e) =>
-        new Promise((e) => {
-          setTimeout(() => {
-            e();
-          }, 50);
-        }),
-    }).then((t) => {
-      if (t.value == true) {
-        $.ajax({
-          type: "post",
-          url: "./question/delete",
-          data: {
-            macauhoi: trid,
-          },
-          success: function (response) {
-            e.fire("Deleted!", "Xóa câu hỏi thành công!", "success");
-            mainPagePagination.getPagination(
-              mainPagePagination.option,
-              mainPagePagination.valuePage.curPage
-            );
-          },
-        });
-      }
-    });
-  });
+      e.fire({
+        title: "Are you sure?",
+        text: "Bạn có chắc chắn muốn xoá câu hỏi này?",
+        icon: "warning",
+        showCancelButton: !0,
+        customClass: {
+          confirmButton: "btn btn-danger m-1",
+          cancelButton: "btn btn-secondary m-1",
+        },
+        confirmButtonText: "Vâng, tôi chắc chắn!",
+        html: !1,
+        preConfirm: (e) =>
+          new Promise((e) => {
+            setTimeout(() => {
+              e();
+            }, 50);
+          }),
+      }).then((t) => {
+        if (t.value == true) {
+          $.ajax({
+            type: "post",
+            url: "./question/delete",
+            data: {
+              macauhoi: trid,
+            },
+            success: function (response) {
+              e.fire("Deleted!", "Xóa câu hỏi thành công!", "success");
+              mainPagePagination.getPagination(
+                mainPagePagination.option,
+                mainPagePagination.valuePage.curPage
+              );
+            },
+          });
+        }
+      });
+    }
+  );
 
   // loadDataQuestion
   var page = 1;
@@ -869,7 +732,7 @@ const mainPagePagination = new Pagination();
 mainPagePagination.option.controller = "question";
 mainPagePagination.option.model = "CauHoiModel";
 mainPagePagination.option.limit = 10;
-mainPagePagination.option.type = 2;
+mainPagePagination.option.type = 0;
 mainPagePagination.option.id = currentUser;
 mainPagePagination.option.filter = {};
 mainPagePagination.getPagination(

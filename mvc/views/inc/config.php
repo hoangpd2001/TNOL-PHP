@@ -33,10 +33,17 @@ $GLOBALS['navbar'] = [
                 'url'   => 'client/review',
                 'role' => 'tgthi'
             ),
+            array(
+                'name'  => 'Ôn luyện',
+                'icon'  => 'fa fa-graduation-cap',
+                'url'   => 'client/autoreview',
+                'role' => 'tgthi'
+            ),
         ]
             ),
+
     array(
-        'name'  => 'Quản lý',
+        'name'  => 'Tổ chức',
         'type'  => 'heading',
         'navbarItem' => [
             array(
@@ -75,24 +82,7 @@ $GLOBALS['navbar'] = [
                 'url'   => 'classroom',
                 'role' => 'monhoc'
             ),
-            array(
-                'name'  => 'Câu hỏi',
-                'icon'  => 'fa fa-circle-question',
-                'url'   => 'question',
-                'role' => 'cauhoi'
-            ),
-            array(
-                'name'  => 'Giáo viên',
-                'icon'  => 'fa fa-user-friends',
-                'url'   => 'teacher',
-                'role' => 'nguoidung'
-            ),
-            array(
-                'name'  => 'Người dùng',
-                'icon'  => 'fa fa-user-friends',
-                'url'   => 'user',
-                'role' => 'nguoidung'
-            ),
+        
             array(
                 'name'  => 'Môn học',
                 'icon'  => 'fa fa-folder',
@@ -100,11 +90,38 @@ $GLOBALS['navbar'] = [
                 'role' => 'monhoc'
             ),
             array(
-                'name'  => 'Phân công',
-                'icon'  => 'fa fa-person-harassing',
-                'url'   => 'assignment',
-                'role' => 'phancong'
+                'name'  => 'Thông báo',
+                'icon'  => 'fa fa-comment',
+                'url'   => 'teacher_announcement',
+                'role' => 'thongbao'
             ),
+        ]
+    ),
+    array(
+        'name'  => 'Trắc Nghiệm ',
+        'type'  => 'heading',
+        'navbarItem' => [
+        
+            array(
+                'name'  => 'Câu hỏi',
+                'icon'  => 'fa fa-circle-question',
+                'url'   => 'question',
+                'role' => 'cauhoi'
+            ),
+            array(
+                'name'  => 'Duyệt Câu hỏi',
+                'icon'  => 'fa fa-circle-question',
+                'url'   => 'question/approve',
+                'role' => 'monhoc'
+            ),
+
+       
+            // array(
+            //     'name'  => 'Phân công',
+            //     'icon'  => 'fa fa-person-harassing',
+            //     'url'   => 'assignment',
+            //     'role' => 'phancong'
+            // ),
             array(
                 'name'  => 'Thống kê KQ kiểm tra',
                 'icon'  => 'fa fa-file',
@@ -129,12 +146,6 @@ $GLOBALS['navbar'] = [
                 'url'   => 'test/assign',
                 'role' => 'dethi'
             ),
-            array(
-                'name'  => 'Thông báo',
-                'icon'  => 'fa fa-comment',
-                'url'   => 'teacher_announcement',
-                'role' => 'thongbao'
-            ),
         ]
     ),
     array(
@@ -146,6 +157,18 @@ $GLOBALS['navbar'] = [
                 'icon'  => 'fa fa-users-gear',
                 'url'   => 'roles',
                 'role' => 'nhomquyen'
+            ),
+            array(
+                'name'  => 'Giáo viên',
+                'icon'  => 'fa fa-user-friends',
+                'url'   => 'teacher',
+                'role' => 'nguoidung'
+            ),
+            array(
+                'name'  => 'Người dùng',
+                'icon'  => 'fa fa-user-friends',
+                'url'   => 'user',
+                'role' => 'nguoidung'
             ),
             // array(
             //     'name'  => 'Cài đặt',

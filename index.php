@@ -5,7 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Dotenv\Dotenv;
 
 $dotenv = Dotenv::createImmutable(__DIR__);
-$dotenv->load(); // ✅ Load tại đây 1 lần là đủ cho toàn hệ thống
+$dotenv->load();
 
 require_once "./mvc/Bridge.php";
 
