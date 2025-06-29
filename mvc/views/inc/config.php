@@ -114,8 +114,9 @@ $GLOBALS['navbar'] = [
                 'url'   => 'question/approve',
                 'role' => 'monhoc'
             ),
+            
 
-       
+
             // array(
             //     'name'  => 'Phân công',
             //     'icon'  => 'fa fa-person-harassing',
@@ -139,6 +140,12 @@ $GLOBALS['navbar'] = [
                 'icon'  => 'fa fa-file',
                 'url'   => 'test/base',
                 'role' => 'dethi'
+            ),
+            array(
+                'name'  => 'Duyệt Đề thi',
+                'icon'  => 'fa fa-circle-question',
+                'url'   => 'test/approve',
+                'role' => 'monhoc'
             ),
             array(
                 'name'  => 'Giao đề',

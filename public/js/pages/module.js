@@ -117,12 +117,12 @@ $(document).ready(function () {
                                         <i class="nav-main-link-icon si si-info me-2 text-dark"></i>
                                         <span class="nav-main-link-name fw-normal">Danh sách sinh viên</span>
                                     </a>
-                                    <a class="nav-main-link dropdown-item btn-update-group" href="javascript:void(0)" data-id="${nhom_item.manhom}" data-role="hocphan" data-action="update">
+                                    <a class="nav-main-link dropdown-item btn-update-group" href="javascript:void(0)" data-id="${nhom_item.manhom}" data-role="nhom" data-action="update">
                                         <i class="nav-main-link-icon si si-pencil me-2 text-dark"></i>
                                         <span class="nav-main-link-name fw-normal">Sửa thông tin</span>
                                     </a>
                                     ${btn_hide}
-                                    <a class="nav-main-link dropdown-item btn-delete-group" href="javascript:void(0)" data-id="${nhom_item.manhom}" data-role="hocphan" data-action="delete">
+                                    <a class="nav-main-link dropdown-item btn-delete-group" href="javascript:void(0)" data-id="${nhom_item.manhom}" data-role="nhom" data-action="delete">
                                         <i class="nav-main-link-icon si si-trash me-2 text-danger"></i>
                                         <span class="nav-main-link-name fw-normal text-danger">Xoá nhóm</span>
                                     </a>

@@ -10,6 +10,29 @@ class NganhModel extends DB
         if (!$result) $valid = false;
         return $valid;
     }
+    public function check($tennganh, $makhoa)
+    {
+        $tennganh = mysqli_real_escape_string($this->con, $tennganh);
+        $sql = "SELECT 1 FROM `nganh` WHERE `tennganh` = '$tennganh' and makhoa = $makhoa LIMIT 1";
+        $result = mysqli_query($this->con, $sql);
+        return mysqli_num_rows($result) > 0;
+    }
+
+    public function check2($tennganh, $manganh, $makhoa)
+    {
+        $tennganh = mysqli_real_escape_string($this->con, $tennganh);
+        $manganh = intval($manganh);
+        $makhoa = intval($makhoa);
+
+        $sql = "SELECT 1 FROM `nganh` 
+                WHERE `tennganh` = '$tennganh' 
+                AND makhoa = $makhoa 
+                AND manganh != $manganh 
+                LIMIT 1";
+
+        $result = mysqli_query($this->con, $sql);
+        return mysqli_num_rows($result) > 0;
+    }
 
     public function update($manganh, $tennganh, $makhoa, $trangthai)
     {

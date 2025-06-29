@@ -1,5 +1,5 @@
 <div class="row g-0 flex-md-grow-1" id="chitietdethi" data-id="<?php echo $data["Test"]["made"] ?>"
-    data-loaigiao="<?php echo $data["Loaigiao"] ?>" data-manguongiao="<?php echo $data["Manguongiao"]?>">
+    data-loaigiao="<?php echo $data["Loaigiao"] ?>" data-manguongiao="<?php echo $data["Manguongiao"] ?>">
     <div class="content content-full">
         <div class="block block-rounded">
             <ul class="nav nav-tabs nav-tabs-alt align-items-center" role="tablist">
@@ -37,11 +37,16 @@
                                     </ul>
                                     <button class="btn btn-alt-secondary dropdown-toggle btn-filtered-by-state" id="dropdown-filter-state" type="button" data-bs-toggle="dropdown" aria-expanded="false">Đã nộp bài</button>
                                     <ul class="dropdown-menu mt-1" aria-labelledby="dropdown-filter-state">
-                                        <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="present">Đã nộp bài</a></li>
-                                        <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="absent">Vắng thi</a></li>
-                                        <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="interrupted">Chưa nộp bài</a></li>
-                                        <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="all">Tất cả</a></li>
+                                        <?php if ($data["Loaigiao"] == -1): ?>
+                                            <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="present">Đã nộp bài</a></li>
+                                        <?php else: ?>
+                                            <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="present">Đã nộp bài</a></li>
+                                            <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="absent">Vắng thi</a></li>
+                                            <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="interrupted">Chưa nộp bài</a></li>
+                                            <li><a class="dropdown-item filtered-by-state" href="javascript:void(0)" data-state="all">Tất cả</a></li>
+                                        <?php endif; ?>
                                     </ul>
+
                                     <input type="text" class="form-control form-control-alt" id="search-input" name="search-input" placeholder="Tìm kiếm sinh viên...">
                                     <!-- <span class="input-group-text bg-body border-0">
                                         <i class="fa fa-search"></i>

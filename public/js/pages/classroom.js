@@ -41,11 +41,11 @@ $.get(
   "./faculty/getAll",
   function (data) {
     let html = "<option></option>";
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
     });
     $("#main-page-khoa").html(html);
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       facultyMap[item.makhoa] = item.tenkhoa;
     });
     //  showData(classroom);
@@ -57,11 +57,11 @@ $.get(
   "./course/getAll",
   function (data) {
     let html = "<option></option>";
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       html += `<option value="${item.makhoahoc}">${item.tenkhoahoc}</option>`;
     });
     $("#main-page-khoahoc").html(html);
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       courseMap[item.makhoahoc] = item.tenkhoahoc;
     });
     //  showData(classroom);
@@ -82,7 +82,7 @@ $("#main-page-khoa").on("change", function () {
     data: { makhoa: makhoa },
     dataType: "json",
     success: function (data) {
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         nganhHtml += `<option value="${item.manganh}">${item.tennganh}</option>`;
       });
       $(`#main-page-nganh[data-tab="${id}"]`).html(nganhHtml);
@@ -95,7 +95,7 @@ $("#main-page-khoa").on("change", function () {
     data: { makhoa: makhoa },
     dataType: "json",
     success: function (data) {
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         giaoVienHtml += `<option value="${item.id}">${item.hoten}</option>`;
       });
       $(`#main-page-giaovien[data-tab="${id}"]`).html(giaoVienHtml);
@@ -173,7 +173,7 @@ function loadFaculties() {
       "./faculty/getAll",
       function (data) {
         let html = "<option></option>";
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
         });
         $("#tenkhoa").html(html);
@@ -216,7 +216,7 @@ function loadMajorsByFaculty(makhoa) {
       dataType: "json",
       success: function (data) {
         let html = "<option></option>";
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.manganh}">${item.tennganh}</option>`;
         });
         $("#tennganh").html(html);
@@ -240,7 +240,7 @@ function loadCourses() {
       "./course/getAll",
       function (data) {
         let html = "<option></option>";
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.makhoahoc}">${item.tenkhoahoc}</option>`;
         });
         $("#tenkhoahoc").html(html);
@@ -271,7 +271,7 @@ $(document).ready(function () {
       dataType: "json",
       success: function (data) {
         let html = "<option></option>";
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.manganh}">${item.tennganh}</option>`;
         });
         $("#tennganh").html(html).trigger("change");

@@ -59,9 +59,11 @@ function showListTest(tests) {
                         <div class="p-1 p-md-3">
                             ${htmlTestState}
                           <a class="btn btn-sm btn-alt-success rounded-pill px-3 me-1 my-1 btn-detail-test" data-made="${test.made}">
-    <i class="fa fa-eye opacity-50 me-1"></i> Xem chi tiết
+    <i class="fa fa-eye opacity-50 me-1"></i> Chi tiết
 </a>
-
+   <a class="btn btn-sm btn-alt-success rounded-pill px-3 me-1 my-1" href="./test/detail/${test.made}?loaigiao=-1&manguongiao=-1">
+                                <i class="fa fa-bar-chart opacity-50 me-1"></i> Thống kê
+                            </a>
                             <a data-role="dethi" data-action="update" class="btn btn-sm btn-alt-primary rounded-pill px-3 me-1 my-1" href="./test/update/${test.made}">
                                 <i class="fa fa-wrench opacity-50 me-1"></i> Chỉnh sửa
                             </a>

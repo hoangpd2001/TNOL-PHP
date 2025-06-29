@@ -136,7 +136,7 @@ $(document).ready(function () {
     });
     return check;
   }
-
+  // Thêm khoa
   $("#add_faculty").on("click", function () {
     let makhoa = $("#makhoa").val();
     if ($(".form-add-faculty").valid() && checkTonTai(makhoa)) {
@@ -144,16 +144,16 @@ $(document).ready(function () {
         type: "post",
         url: "./faculty/add",
         data: {
-          makhoa: makhoa,
           tenkhoa: $("#tenkhoa").val(),
           magiaovien: $("#tengiaovien").val(),
         },
-        success: function (response) {
-          if (response) {
+        dataType: "json",
+        success: function (res) {
+          if (res.status) {
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Thêm khoa thành công!",
+              message: res.message || "Thêm khoa thành công!",
             });
             $("#modal-add-faculty").modal("hide");
             mainPagePagination.getPagination(
@@ -164,51 +164,78 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Thêm khoa không thành công!",
+              message: res.message || "Thêm khoa không thành công!",
             });
           }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi kết nối tới server!",
+          });
         },
       });
     }
   });
 
+  // Nhấn nút sửa khoa
   $(document).on("click", ".btn-edit-faculty", function () {
     $(".update-faculty-element").show();
     $(".add-faculty-element").hide();
     let makhoa = $(this).data("id");
-    console.log("makhoa", makhoa);
-     loadUser(function () {
-    $.ajax({
-      type: "post",
-      url: "./faculty/getDetail",
-      data: {
-        makhoa: makhoa,
-      },
-      dataType: "json",
-      success: function (response) {
-        console.log("response", response);
-        if (response) {
-          $("#makhoa").val(response.makhoa),
-            $("#tenkhoa").val(response.tenkhoa),
-            $("#tengiaovien").val(response.magiaovien).trigger("change"),
-            $("#modal-add-faculty").modal("show"),
-            $("#update_faculty").data("id", response.makhoa);
-        }
-      },
-    });
+
+    loadUser(function () {
+      $.ajax({
+        type: "post",
+        url: "./faculty/getDetail",
+        data: { makhoa },
+        dataType: "json",
+        success: function (res) {
+          if (res.status && res.data) {
+            $("#makhoa").val(res.data.makhoa);
+            $("#tenkhoa").val(res.data.tenkhoa);
+            $("#tengiaovien").val(res.data.magiaovien).trigger("change");
+            $("#modal-add-faculty").modal("show");
+            $("#update_faculty").data("id", res.data.makhoa);
+          } else {
+            Dashmix.helpers("jq-notify", {
+              type: "danger",
+              icon: "fa fa-times me-1",
+              message: res.message || "Không tìm thấy thông tin khoa!",
+            });
+          }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi khi lấy thông tin khoa!",
+          });
+        },
+      });
     });
   });
 
-  // Đóng modal thì reset form
+  // Reset form khi đóng modal
   $("#modal-add-faculty").on("hidden.bs.modal", function () {
-    $("#makhoa").val(""),
-      $("#tenkhoa").val(""),
-      $("#tengiaovien").val(""),
-      $("#update_faculty").data("id", "");
+    $("#makhoa").val("");
+    $("#tenkhoa").val("");
+    $("#tengiaovien").val("");
+    $("#update_faculty").data("id", "");
+    $(".add-faculty-element").show();
+    $(".update-faculty-element").hide();
   });
-  $("#open-modal-add-faculty").click(function (e) {
+
+  // Mở modal thêm
+  $("#open-modal-add-faculty").click(function () {
     loadUser(function () {});
+    $(".add-faculty-element").show();
+    $(".update-faculty-element").hide();
+    $("#modal-add-faculty").modal("show");
   });
+
+  // Cập nhật khoa
   $("#update_faculty").click(function (e) {
     e.preventDefault();
     let makhoa = $(this).data("id");
@@ -217,18 +244,18 @@ $(document).ready(function () {
         type: "post",
         url: "./faculty/update",
         data: {
-          makhoa: makhoa,
+          makhoa,
           tenkhoa: $("#tenkhoa").val(),
           magiaovien: $("#tengiaovien").val(),
         },
-        success: function (response) {
-          if (response) {
-            console.log("response", response);
+        dataType: "json",
+        success: function (res) {
+          if (res.status) {
             $("#modal-add-faculty").modal("hide");
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Cập nhật khoa thành công!",
+              message: res.message || "Cập nhật khoa thành công!",
             });
             mainPagePagination.getPagination(
               mainPagePagination.option,
@@ -238,61 +265,60 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Cập nhật khoa không thành công!",
+              message: res.message || "Cập nhật khoa thất bại!",
             });
           }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi khi cập nhật khoa!",
+          });
         },
       });
     }
   });
 
+  // Xóa khoa
   $(document).on("click", ".btn-delete-faculty", function () {
-    let trid = $(this).data("id");
-    let e = Swal.mixin({
-      buttonsStyling: !1,
-      target: "#page-container",
-      customClass: {
-        confirmButton: "btn btn-success m-1",
-        cancelButton: "btn btn-danger m-1",
-        input: "form-control",
-      },
-    });
+    let makhoa = $(this).data("id");
 
-    e.fire({
-      title: "Are you sure?",
-      text: "Bạn có chắc chắn muốn xoá khoa?",
+    Swal.fire({
+      title: "Bạn chắc chắn muốn xóa?",
+      text: "Hành động này không thể hoàn tác!",
       icon: "warning",
-      showCancelButton: !0,
+      showCancelButton: true,
+      confirmButtonText: "Vâng, xóa!",
+      cancelButtonText: "Hủy",
       customClass: {
         confirmButton: "btn btn-danger m-1",
         cancelButton: "btn btn-secondary m-1",
       },
-      confirmButtonText: "Vâng, tôi chắc chắn!",
-      html: !1,
-      preConfirm: (e) =>
-        new Promise((e) => {
-          setTimeout(() => {
-            e();
-          }, 50);
-        }),
-    }).then((t) => {
-      if (t.value == true) {
+    }).then((result) => {
+      if (result.isConfirmed) {
         $.ajax({
           type: "post",
           url: "./faculty/delete",
-          data: {
-            makhoa: trid,
-          },
-          success: function (response) {
-            if (response) {
-              e.fire("Deleted!", "Xóa khoa thành công!", "success");
+          data: { makhoa },
+          dataType: "json",
+          success: function (res) {
+            if (res.status) {
+              Swal.fire(
+                "Đã xóa!",
+                res.message || "Xóa khoa thành công!",
+                "success"
+              );
               mainPagePagination.getPagination(
                 mainPagePagination.option,
                 mainPagePagination.valuePage.curPage
               );
             } else {
-              e.fire("Lỗi !", "Xoá khoa không thành công !)", "error");
+              Swal.fire("Lỗi!", res.message || "Xóa khoa thất bại!", "error");
             }
+          },
+          error: function () {
+            Swal.fire("Lỗi!", "Không thể kết nối đến server!", "error");
           },
         });
       }

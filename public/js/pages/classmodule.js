@@ -182,11 +182,11 @@ $(document).ready(function () {
     "./faculty/getAll",
     function (data) {
       let html = "<option></option>";
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
       });
       $("#ten-khoa").html(html);
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         facultyMap[item.makhoa] = item.tenkhoa;
       });
       //  showData(classroom);
@@ -198,11 +198,11 @@ $(document).ready(function () {
     "./course/getAll",
     function (data) {
       let html = "<option></option>";
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         html += `<option value="${item.makhoahoc}">${item.tenkhoahoc}</option>`;
       });
       $("#ten-khoahoc").html(html);
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         courseMap[item.makhoahoc] = item.tenkhoahoc;
       });
       //  showData(classroom);
@@ -253,7 +253,7 @@ $(document).ready(function () {
       },
       dataType: "json",
       success: function (data) {
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.manganh}">${item.tennganh}</option>`;
         });
         $(`#ten-nganh`).html(html);

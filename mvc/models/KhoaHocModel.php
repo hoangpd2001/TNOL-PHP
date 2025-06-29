@@ -1,15 +1,28 @@
 <?php
 class KhoaHocModel extends DB
 {
-    public function create($makhoahoc, $tenkhoahoc, $trangthai)
+    public function create( $tenkhoahoc, $trangthai)
     {
         $valid = true;
-        $sql = "INSERT INTO `khoahoc` (`makhoahoc`, `tenkhoahoc`, `trangthai`) VALUES ('$makhoahoc', '$tenkhoahoc', '$trangthai')";
+        $sql = "INSERT INTO `khoahoc` ( `tenkhoahoc`, `trangthai`) VALUES ( '$tenkhoahoc', '$trangthai')";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
         return $valid;
     }
-
+    public function check($tenkhoa)
+    {
+        $tenkhoa = mysqli_real_escape_string($this->con, $tenkhoa);
+        $sql = "SELECT 1 FROM `khoahoc` WHERE `tenkhoahoc` = '$tenkhoa' LIMIT 1";
+        $result = mysqli_query($this->con, $sql);
+        return mysqli_num_rows($result) > 0;
+    }
+    public function check2($tenkhoa, $makhoa)
+    {
+        $tenkhoa = mysqli_real_escape_string($this->con, $tenkhoa);
+        $sql = "SELECT 1 FROM `khoahoc` WHERE `tenkhoahoc` = '$tenkhoa' AND makhoahoc != $makhoa LIMIT 1";
+        $result = mysqli_query($this->con, $sql);
+        return mysqli_num_rows($result) > 0;
+    }
     public function update($makhoahoc, $tenkhoahoc, $trangthai)
     {
         $valid = true;

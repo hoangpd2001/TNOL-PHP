@@ -19,7 +19,7 @@ function showListTest(tests) {
     tests.forEach((test) => {
       let htmlTestState = ``;
       const open = new Date(test.thoigianbatdau);
-      const close = new Date(test.thoigianketthuc);
+      const close = new Date(open.getTime() + test.thoigianthi * 60 * 1000);
       let strOpenTime = "",
         strCloseTime = "";
       if (dateIsValid(test.thoigianbatdau)) {
@@ -83,8 +83,12 @@ function showListTest(tests) {
                         </div>
                         <div class="p-1 p-md-3">
                             ${htmlTestState}
-                            <a class="btn btn-sm btn-alt-success rounded-pill px-3 me-1 my-1" href="./test/detail/${test.made}?loaigiao=${test.loaigiao}&manguongiao=${test.manguongiao}">
-                                <i class="fa fa-eye opacity-50 me-1"></i> Xem chi tiết
+                            <a class="btn btn-sm btn-alt-success rounded-pill px-3 me-1 my-1" href="./test/detail/${
+                              test.made
+                            }?loaigiao=${test.loaigiao}&manguongiao=${
+        test.manguongiao
+      }">
+                                <i class="fa fa-bar-chart opacity-50 me-1"></i> Thống kê
                             </a>
                             <a data-role="dethi" data-action="update" class="btn btn-sm btn-alt-primary rounded-pill px-3 me-1 my-1" href="./test/update/${
                               test.made

@@ -367,6 +367,7 @@ $(document).ready(function () {
       data: {
         made: made,
         manhom: manhom,
+        loaigiao:loaigiao,
         ds: ds,
       },
       success: function (response) {
@@ -402,6 +403,8 @@ function getStatictical() {
   let selectedGroup = $(".filtered-by-static.active").data("id");
   let manhom = selectedGroup === 0 ? listGroupID.slice(1) : selectedGroup;
   console.log(manhom)
+  console.log(loaigiao)
+  if(loaigiao == -1) manhom = -1
   $.ajax({
     type: "post",
     url: "./test/getStatictical",
@@ -441,6 +444,8 @@ function getStatictical() {
 getStatictical();
 
 function showChart(data) {
+  console.log("show chart")
+  console.log(data)
   // Thiết lập các nhãn cho biểu đồ
   const labels = [
     "<= 1",

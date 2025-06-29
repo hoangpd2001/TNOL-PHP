@@ -1,77 +1,127 @@
 <?php
 require_once "./mvc/core/AuthCore.php";
+require_once "./mvc/core/Response.php";
+require_once "./mvc/core/Pagination.php";
 
+use Core\Response;
 class Faculty extends Controller
 {
-    public $khoaModel;
+    private $khoaModel;
 
     public function __construct()
     {
         $this->khoaModel = $this->model("KhoaModel");
-        require_once "./mvc/core/Pagination.php";
     }
+
     public function default()
     {
-        if (AuthCore::checkPermission("monhoc", "view")) {
-            $this->view("main_layout", [
-                "Page" => "faculty",
-                "Title" => "Quản lý môn học",
-                "Script" => "faculty",
-                "Plugin" => [
-                    "sweetalert2" => 1,
-                    "jquery-validate" => 1,
-                    "select" => 1,
-                    "notify" => 1,
-                    "pagination" => [],
-                ]
-            ]);
-        } else $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        if (!AuthCore::checkPermission("monhoc", "view")) {
+            return Response::json(false, 'Forbidden', null, 403);
+        }
+
+        // Render view
+        $this->view("main_layout", [
+            "Page"   => "faculty",
+            "Title"  => "Quản lý Môn học",
+            "Script" => "faculty",
+            "Plugin" => [
+                "sweetalert2"     => 1,
+                "jquery-validate" => 1,
+                "select"         => 1,
+                "notify"         => 1,
+                "pagination"     => [],
+            ]
+        ]);
     }
+
     public function add()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $makhoa = $_POST['makhoa'];
-            $tenkhoa = $_POST['tenkhoa'];
-            $magiaovien = $_POST['magiaovien'];
-            $result = $this->khoaModel->create($makhoa, $tenkhoa,$magiaovien);
-            echo $result;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return Response::json(false, 'Method Not Allowed', null, 405);
         }
+
+        $tenkhoa    = trim($_POST['tenkhoa'] ?? '');
+        $magiaovien = trim($_POST['magiaovien'] ?? '');
+
+        if (empty($tenkhoa) || empty($magiaovien)) {
+            return Response::json(false, 'Thiếu dữ liệu', null, 400);
+        }
+
+        if ($this->khoaModel->check($tenkhoa)) {
+            return Response::json(false, 'Tên khoa đã tồn tại');
+        }
+
+        $created = $this->khoaModel->create($tenkhoa, $magiaovien);
+        return Response::json(
+            $created,
+            $created ? 'Thêm khoa thành công' : 'Thêm khoa thất bại'
+        );
     }
 
     public function update()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $makhoa = $_POST['makhoa'];
-            $tenkhoa = $_POST['tenkhoa'];
-            $magiaovien = $_POST['magiaovien'];
-            $result = $this->khoaModel->update( $makhoa, $tenkhoa, $magiaovien);
-            echo $result;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return Response::json(false, 'Method Not Allowed', null, 405);
         }
+
+        $makhoa     = trim($_POST['makhoa'] ?? '');
+        $tenkhoa    = trim($_POST['tenkhoa'] ?? '');
+        $magiaovien = trim($_POST['magiaovien'] ?? '');
+
+        if (empty($makhoa) || empty($tenkhoa) || empty($magiaovien)) {
+            return Response::json(false, 'Thiếu dữ liệu', null, 400);
+        }
+
+        if ($this->khoaModel->check2($tenkhoa, $makhoa)) {
+            return Response::json(false, 'Tên khoa đã tồn tại');
+        }
+
+        $updated = $this->khoaModel->update($makhoa, $tenkhoa, $magiaovien);
+        return Response::json(
+            $updated,
+            $updated ? 'Cập nhật thành công' : 'Cập nhật thất bại'
+        );
     }
 
     public function delete()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
-            $makhoa = $_POST['makhoa'];
-            $result = $this->khoaModel->delete($makhoa);
-            echo $result;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return Response::json(false, 'Method Not Allowed', null, 405);
         }
+
+        $makhoa = trim($_POST['makhoa'] ?? '');
+        if (empty($makhoa)) {
+            return Response::json(false, 'Thiếu mã khoa', null, 400);
+        }
+
+        $deleted = $this->khoaModel->delete($makhoa);
+        return Response::json(
+            $deleted,
+            $deleted ? 'Xóa khoa thành công' : 'Xóa khoa thất bại'
+        );
     }
 
     public function getAll()
     {
         $data = $this->khoaModel->getAll();
-        echo json_encode($data);
+        return Response::json(true, '', $data);
     }
-
 
     public function getDetail()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['makhoa'])) {
-            $data = $this->khoaModel->getById($_POST['makhoa']);
-            echo json_encode($data);
-        } else {
-            echo json_encode(null);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return Response::json(false, 'Method Not Allowed', null, 405);
         }
+        $makhoa = trim($_POST['makhoa'] ?? '');
+        if (empty($makhoa)) {
+            return Response::json(false, 'Thiếu mã khoa', null, 400);
+        }
+
+        $detail = $this->khoaModel->getById($makhoa);
+        return Response::json(
+            $detail !== null,
+            $detail ? '' : 'Không tìm thấy thông tin',
+            $detail
+        );
     }
 }

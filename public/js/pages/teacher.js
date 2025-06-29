@@ -430,7 +430,7 @@ $(document).ready(function () {
         Dashmix.helpers("jq-notify", {
           type: "success",
           icon: "fa fa-times me-1",
-          message: `Thêm người dùng không thành công!`,
+          message: `Thêm người dùng thành công!`,
         });
       },
     });

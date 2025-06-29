@@ -14,7 +14,7 @@
         </div>
         <div class="col-6 d-flex align-items-center justify-content-end gap-3">
             <button type="button" class="btn btn-hero btn-primary" data-bs-toggle="modal"
-                data-bs-target="#modal-add-group" data-role="hocphan" data-action="create"><i class="fa fa-fw fa-plus me-1"></i> Thêm nhóm</button>
+                data-bs-target="#modal-add-group" data-role="nhom" data-action="create"><i class="fa fa-fw fa-plus me-1"></i> Thêm nhóm</button>
         </div>
     </div>
     <div class="class-group" id="class-group">

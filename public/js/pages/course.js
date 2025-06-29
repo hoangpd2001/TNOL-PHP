@@ -67,47 +67,23 @@ $(document).ready(function () {
     $(".add-course-element").show();
   });
 
-  function checkCourseExists(makhoahoc) {
-    let check = true;
-    $.ajax({
-      type: "post",
-      url: "./course/checkCourse",
-      data: {
-        makhoahoc: makhoahoc,
-      },
-      async: false,
-      dataType: "json",
-      success: function (response) {
-        if (response.length !== 0) {
-          Dashmix.helpers("jq-notify", {
-            type: "danger",
-            icon: "fa fa-times me-1",
-            message: "Mã khoá học đã tồn tại!",
-          });
-          check = false;
-        }
-      },
-    });
-    return check;
-  }
-
+  // Thêm khóa học
   $("#add_course").on("click", function () {
-    let makhoahoc = $("#makhoahoc").val();
-    if ($(".form-add-course").valid() && checkCourseExists(makhoahoc)) {
+    if ($(".form-add-course").valid()) {
       $.ajax({
         type: "post",
         url: "./course/add",
         data: {
-          makhoahoc: makhoahoc,
           tenkhoahoc: $("#tenkhoahoc").val(),
-          magiaovien: $("#giaovienphutrach").val(),
+          magiaovien: $("#giaovienphutrach").val(), // nếu có dùng ở controller
         },
-        success: function (response) {
-          if (response) {
+        dataType: "json",
+        success: function (res) {
+          if (res.status) {
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Thêm khoá học thành công!",
+              message: res.message || "Thêm khóa học thành công!",
             });
             $("#modal-add-course").modal("hide");
             mainCoursePagination.getPagination(
@@ -118,51 +94,77 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Thêm khoá học thất bại!",
+              message: res.message || "Thêm khóa học thất bại!",
             });
           }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi kết nối tới server!",
+          });
         },
       });
     }
   });
 
+  // Nhấn nút sửa
   $(document).on("click", ".btn-edit-course", function () {
     $(".update-course-element").show();
     $(".add-course-element").hide();
-    let makhoahoc = $(this).data("id");
+    const makhoahoc = $(this).data("id");
 
-
-      $.ajax({
-        type: "post",
-        url: "./course/getDetail",
-        data: {
-          makhoahoc: makhoahoc,
-        },
-        dataType: "json",
-        success: function (response) {
-          if (response) {
-            $("#makhoahoc").val(response.makhoahoc),
-              $("#tenkhoahoc").val(response.tenkhoahoc),
-              $("#giaovienphutrach").val(response.magiaovien).trigger("change"),
-              $("#modal-add-course").modal("show"),
-              $("#update_course").data("id", response.makhoahoc);
-          }
-        },
-    
+    $.ajax({
+      type: "post",
+      url: "./course/getDetail",
+      data: { makhoahoc },
+      dataType: "json",
+      success: function (res) {
+        if (res.status && res.data) {
+          $("#makhoahoc").val(res.data.makhoahoc);
+          $("#tenkhoahoc").val(res.data.tenkhoahoc);
+          $("#giaovienphutrach")
+            .val(res.data.magiaovien || "")
+            .trigger("change");
+          $("#update_course").data("id", res.data.makhoahoc);
+          $("#modal-add-course").modal("show");
+        } else {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: res.message || "Không tìm thấy khóa học!",
+          });
+        }
+      },
+      error: function () {
+        Dashmix.helpers("jq-notify", {
+          type: "danger",
+          icon: "fa fa-times me-1",
+          message: "Lỗi khi lấy thông tin khóa học!",
+        });
+      },
     });
   });
 
+  // Reset form khi đóng modal
   $("#modal-add-course").on("hidden.bs.modal", function () {
-    $("#makhoahoc").val(""),
-      $("#tenkhoahoc").val(""),
-      $("#giaovienphutrach").val("").trigger("change"),
-      $("#update_course").data("id", "");
+    $("#makhoahoc").val("");
+    $("#tenkhoahoc").val("");
+    $("#giaovienphutrach").val("").trigger("change");
+    $("#update_course").data("id", "");
+    $(".add-course-element").show();
+    $(".update-course-element").hide();
   });
 
+  // Mở modal thêm
   $("#open-modal-add-course").click(function () {
-   
+    $(".add-course-element").show();
+    $(".update-course-element").hide();
+    $("#modal-add-course").modal("show");
   });
 
+  // Cập nhật khóa học
   $("#update_course").click(function (e) {
     e.preventDefault();
     let makhoahoc = $(this).data("id");
@@ -171,17 +173,18 @@ $(document).ready(function () {
         type: "post",
         url: "./course/update",
         data: {
-          makhoahoc: makhoahoc,
+          makhoahoc,
           tenkhoahoc: $("#tenkhoahoc").val(),
-          magiaovien: $("#giaovienphutrach").val(),
+          magiaovien: $("#giaovienphutrach").val(), // nếu controller có hỗ trợ
         },
-        success: function (response) {
-          if (response) {
+        dataType: "json",
+        success: function (res) {
+          if (res.status) {
             $("#modal-add-course").modal("hide");
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Cập nhật khoá học thành công!",
+              message: res.message || "Cập nhật khóa học thành công!",
             });
             mainCoursePagination.getPagination(
               mainCoursePagination.option,
@@ -191,60 +194,68 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Cập nhật thất bại!",
+              message: res.message || "Cập nhật khóa học thất bại!",
             });
           }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi kết nối khi cập nhật!",
+          });
         },
       });
     }
   });
 
+  // Xoá khóa học
   $(document).on("click", ".btn-delete-course", function () {
-    let trid = $(this).data("id");
-    let swal = Swal.mixin({
-      buttonsStyling: !1,
-      target: "#page-container",
-      customClass: {
-        confirmButton: "btn btn-success m-1",
-        cancelButton: "btn btn-danger m-1",
-        input: "form-control",
-      },
-    });
+    const makhoahoc = $(this).data("id");
 
-    swal
-      .fire({
-        title: "Bạn chắc chứ?",
-        text: "Bạn có chắc chắn muốn xoá khoá học?",
-        icon: "warning",
-        showCancelButton: !0,
-        confirmButtonText: "Vâng, tôi chắc chắn!",
-      })
-      .then((result) => {
-        if (result.value === true) {
-          $.ajax({
-            type: "post",
-            url: "./course/delete",
-            data: {
-              makhoahoc: trid,
-            },
-            success: function (response) {
-              if (response) {
-                swal.fire(
-                  "Đã xoá!",
-                  "Khoá học đã được xoá thành công!",
-                  "success"
-                );
-                mainCoursePagination.getPagination(
-                  mainCoursePagination.option,
-                  mainCoursePagination.valuePage.curPage
-                );
-              } else {
-                swal.fire("Lỗi!", "Xoá khoá học thất bại!", "error");
-              }
-            },
-          });
-        }
-      });
+    Swal.fire({
+      title: "Bạn chắc chắn muốn xoá?",
+      text: "Hành động này không thể hoàn tác!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Vâng, xoá!",
+      cancelButtonText: "Hủy",
+      customClass: {
+        confirmButton: "btn btn-danger m-1",
+        cancelButton: "btn btn-secondary m-1",
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          type: "post",
+          url: "./course/delete",
+          data: { makhoahoc },
+          dataType: "json",
+          success: function (res) {
+            if (res.status) {
+              Swal.fire(
+                "Đã xoá!",
+                res.message || "Xoá khóa học thành công!",
+                "success"
+              );
+              mainCoursePagination.getPagination(
+                mainCoursePagination.option,
+                mainCoursePagination.valuePage.curPage
+              );
+            } else {
+              Swal.fire(
+                "Lỗi!",
+                res.message || "Xoá khóa học thất bại!",
+                "error"
+              );
+            }
+          },
+          error: function () {
+            Swal.fire("Lỗi!", "Không thể kết nối đến server!", "error");
+          },
+        });
+      }
+    });
   });
 });
 

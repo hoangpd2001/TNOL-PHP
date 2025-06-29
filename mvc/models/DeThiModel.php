@@ -234,12 +234,19 @@ class DeThiModel extends DB
     public function delete($madethi)
     {
         $valid = true;
-        $sql = "UPDATE `dethi` SET `trangthai`= 0 WHERE `made` = $madethi";
+        $sql = "UPDATE `dethi` SET `trangthai`= -2 WHERE `made` = $madethi";
         $result = mysqli_query($this->con, $sql);
         if (!$result) $valid = false;
         return $valid;
     }
-
+    public function updateApproveTest($madethi)
+    {
+        $valid = true;
+        $sql = "UPDATE `dethi` SET `trangthai`= 1 WHERE `made` = $madethi";
+        $result = mysqli_query($this->con, $sql);
+        if (!$result) $valid = false;
+        return $valid;
+    }
     // Lấy đề thi mà người dùng tạo
     public function getAll($nguoitao)
     {
@@ -936,7 +943,7 @@ class DeThiModel extends DB
                     $check = $nguoiDungModel->checkAdmin($args['id']);
                     $user = $check ? " " : " AND nguoitao = '" . $args['id'] . "' ";
                     $query = "
-                            SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT N.manhom) as manguongiao
+                            SELECT DT.made,DT.thoigianthi, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT N.manhom) as manguongiao
                             , thoigianbatdau, thoigianketthuc,
                             GROUP_CONCAT(N.tennhom SEPARATOR ', ') AS nhom, namhoc, hocky,
                             '0' AS loaigiao
@@ -970,7 +977,7 @@ class DeThiModel extends DB
                     
                             UNION ALL
                     
-                            SELECT DT.made, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT HP.mahocphan) as manguongiao
+                            SELECT DT.made,DT.thoigianthi, tende,hoten, tenmonhoc, GROUP_CONCAT(DISTINCT HP.mahocphan) as manguongiao
                             , thoigianbatdau, thoigianketthuc,
                                 GROUP_CONCAT(L.tenlop SEPARATOR ', ') AS nhom, 
                                 nganh.tennganh AS namhoc,         -- hoặc dùng 'Không rõ'
@@ -1101,6 +1108,25 @@ class DeThiModel extends DB
                          and giaovien.magiaovien = nguoidung.id $user 
 
                     ";
+                    if (isset($filter)) {
+                        $query .= " AND dethi.trangthai = $filter";
+                    }
+
+                    if ($input) {
+                        $query .= " AND (tende LIKE N'%$input%' OR tenmonhoc LIKE N'%$input%' OR hoten LIKE N'%$input%')";
+                    }
+                    //  $query .= " GROUP BY DT.made ORDER BY DT.made DESC";
+                    break;
+                case "getAllCreatedTestBaseApprove":
+                    // Lấy danh sách các đề đã tạo của giảng viên
+                    $nguoiDungModel = new NguoiDungModel();
+                    $check = $nguoiDungModel->checkAdmin($args['id']);
+                    if(!$check)break;
+                    $query = "SELECT dethi.* , nguoidung.hoten, monhoc.tenmonhoc FROM dethi, monhoc, giaovien ,nguoidung
+                            WHERE dethi.monthi = monhoc.mamonhoc and dethi.nguoitao = giaovien.magiaovien
+                             and giaovien.magiaovien = nguoidung.id and dethi.trangthai= 0
+    
+                        ";
                     if (isset($filter)) {
                         $query .= " AND dethi.trangthai = $filter";
                     }

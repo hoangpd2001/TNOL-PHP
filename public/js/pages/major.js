@@ -36,22 +36,25 @@ Dashmix.onLoad(() =>
 
 
 let facultyMap = {};
-$.get(
-  "./faculty/getAll",
-  function (data) {
-    let html = "<option></option>";
-    data.forEach((item) => {
-      html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
-    });
-   $("#main-page-khoa").html(html);
+function load(){
+  $.get(
+    "./faculty/getAll",
+    function (data) {
+      let html = "<option></option>";
+      data.data.forEach((item) => {
+        html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
+      });
+      $("#main-page-khoa").html(html);
 
-    data.forEach((item) => {
-      facultyMap[item.makhoa] = item.tenkhoa;
-    });
-    //  showData(subjects);
-  },
-  "json"
-);
+      data.data.forEach((item) => {
+        facultyMap[item.makhoa] = item.tenkhoa;
+      });
+      //  showData(subjects);
+    },
+    "json"
+  );
+}
+load();
 function loadSelect2() {
   $(".js-select2").each(function () {
     const id = $(this).attr("id");
@@ -103,8 +106,9 @@ function loadFaculties() {
   $.get(
     "./faculty/getAll",
     function (data) {
+    
       let html = "<option></option>";
-      data.forEach((item) => {
+      data.data.forEach((item) => {
         html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
       });
       $("#tenkhoa").html(html);
@@ -123,95 +127,76 @@ $(document).ready(function () {
   });
   // Khi modal đã hiển thị hoàn toàn thì khởi tạo Select2
   $("#modal-add-major").on("shown.bs.modal", function () {
-    loadSelect2();
+   // loadSelect2();
   });
 
-  function checkTonTai(manganh) {
-    let check = true;
-    $.ajax({
-      type: "post",
-      url: "./major/checkmajor",
-      data: {
-        manganh: manganh,
-      },
-      async: false,
-      dataType: "json",
-      success: function (response) {
-        if (response.length !== 0) {
+
+
+  $("#add_major").on("click", function () {
+    if ($(".form-add-major").valid()) {
+      $.ajax({
+        type: "post",
+        url: "./major/add",
+        data: {
+          tennganh: $("#tennganh").val(),
+          makhoa: $("#tenkhoa").val(),
+        },
+        dataType: "json",
+        success: function (response) {
+          if (response.status) {
+            Dashmix.helpers("jq-notify", {
+              type: "success",
+              icon: "fa fa-check me-1",
+              message: response.message || "Thêm ngành thành công!",
+            });
+            $("#modal-add-major").modal("hide");
+
+            // Làm mới danh sách
+            mainPagePagination.getPagination(
+              mainPagePagination.option,
+              mainPagePagination.valuePage.curPage
+            );
+          } else {
+            Dashmix.helpers("jq-notify", {
+              type: "danger",
+              icon: "fa fa-times me-1",
+              message: response.message || "Thêm ngành không thành công!",
+            });
+          }
+        },
+        error: function () {
           Dashmix.helpers("jq-notify", {
             type: "danger",
             icon: "fa fa-times me-1",
-            message: `Ngành đã tồn tại!`,
+            message: "Lỗi kết nối đến server!",
           });
-          check = false;
-        }
-      },
-    });
-    return check;
-  }
-
-  $("#add_major").on("click", function () {
-
-
-    if ($(".form-add-major").valid()) {
-     
-        $.ajax({
-          type: "post",
-          url: "./major/add",
-          data: {
-            tennganh: $("#tennganh").val(),
-            makhoa: $("#tenkhoa").val(),
-          },
-          success: function (response) {
-            if (response) {
-              Dashmix.helpers("jq-notify", {
-                type: "success",
-                icon: "fa fa-check me-1",
-                message: "Thêm ngành thành công!",
-              });
-              $("#modal-add-major").modal("hide");
-              mainPagePagination.getPagination(
-                mainPagePagination.option,
-                mainPagePagination.valuePage.curPage
-              );
-            } else {
-              Dashmix.helpers("jq-notify", {
-                type: "danger",
-                icon: "fa fa-times me-1",
-                message: "Thêm ngành không thành công!",
-              });
-            }
-          },
-        });
-    
+        },
+      });
     }
   });
-
+  
   $(document).on("click", ".btn-edit-major", function () {
     $(".update-major-element").show();
     $(".add-major-element").hide();
 
-    let manganh = $(this).data("id");
-    console.log("manganh", manganh);
+    const manganh = $(this).data("id");
 
     $.ajax({
       type: "post",
       url: "./major/getDetail",
-      data: {
-        manganh: manganh,
-      },
+      data: { manganh },
       dataType: "json",
       success: function (response) {
-        console.log("response", response);
-        if (response) {
-          // Gọi load khoa, sau đó set giá trị makhoa
+        if (response.status && response.data) {
+          // Gọi API lấy danh sách khoa
           $.get(
             "./faculty/getAll",
-            function (data) {
+            function (faculties) {
               let html = "<option></option>";
-              data.forEach((item) => {
+              faculties.data.forEach((item) => {
                 html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
               });
+
               $("#tenkhoa")
                 .html(html)
                 .select2({
@@ -221,20 +206,35 @@ $(document).ready(function () {
                   minimumResultsForSearch: 0,
                 });
 
-              // Sau khi load xong thì set giá trị ngành
-              $("#manganh").val(response.manganh);
-              $("#tennganh").val(response.tennganh);
-              $("#tenkhoa").val(response.makhoa).trigger("change");
+              // Set giá trị sau khi đã load xong khoa
+              const major = response.data;
+              $("#manganh").val(major.manganh);
+              $("#tennganh").val(major.tennganh);
+              $("#tenkhoa").val(major.makhoa).trigger("change");
 
-              $("#update_major").data("id", response.manganh);
+              $("#update_major").data("id", major.manganh);
               $("#modal-add-major").modal("show");
             },
             "json"
           );
+        } else {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: response.message || "Không tìm thấy ngành!",
+          });
         }
+      },
+      error: function () {
+        Dashmix.helpers("jq-notify", {
+          type: "danger",
+          icon: "fa fa-times me-1",
+          message: "Lỗi kết nối tới server!",
+        });
       },
     });
   });
+  
   
 
   // Đóng modal thì reset form
@@ -243,6 +243,7 @@ $(document).ready(function () {
     $("#tennganh").val("");
     $("#tenkhoa").val("");
     $("#update_major").data("id", "");
+    load();
   });
 
   // $("#open-modal-add-major").click(function (e) {
@@ -252,6 +253,7 @@ $(document).ready(function () {
   $("#update_major").click(function (e) {
     e.preventDefault();
     let manganh = $(this).data("id");
+
     if ($(".form-add-major").valid()) {
       $.ajax({
         type: "post",
@@ -261,15 +263,17 @@ $(document).ready(function () {
           tennganh: $("#tennganh").val(),
           makhoa: $("#tenkhoa").val(),
         },
+        dataType: "json",
         success: function (response) {
-          if (response) {
-            console.log("response", response);
+          if (response.status) {
             $("#modal-add-major").modal("hide");
+
             Dashmix.helpers("jq-notify", {
               type: "success",
               icon: "fa fa-check me-1",
-              message: "Cập nhật ngành thành công!",
+              message: response.message || "Cập nhật ngành thành công!",
             });
+
             mainPagePagination.getPagination(
               mainPagePagination.option,
               mainPagePagination.valuePage.curPage
@@ -278,66 +282,76 @@ $(document).ready(function () {
             Dashmix.helpers("jq-notify", {
               type: "danger",
               icon: "fa fa-times me-1",
-              message: "Cập nhật ngành không thành công!",
+              message: response.message || "Cập nhật ngành không thành công!",
             });
           }
+        },
+        error: function () {
+          Dashmix.helpers("jq-notify", {
+            type: "danger",
+            icon: "fa fa-times me-1",
+            message: "Lỗi kết nối đến server!",
+          });
         },
       });
     }
   });
-
   $(document).on("click", ".btn-delete-major", function () {
-    let trid = $(this).data("id");
-    let e = Swal.mixin({
+    const manganh = $(this).data("id");
+
+    const swal = Swal.mixin({
       buttonsStyling: false,
       target: "#page-container",
       customClass: {
-        confirmButton: "btn btn-success m-1",
-        cancelButton: "btn btn-danger m-1",
+        confirmButton: "btn btn-danger m-1",
+        cancelButton: "btn btn-secondary m-1",
         input: "form-control",
       },
     });
 
-    e.fire({
-      title: "Are you sure?",
-      text: "Bạn có chắc chắn muốn xoá ngành?",
-      icon: "warning",
-      showCancelButton: true,
-      customClass: {
-        confirmButton: "btn btn-danger m-1",
-        cancelButton: "btn btn-secondary m-1",
-      },
-      confirmButtonText: "Vâng, tôi chắc chắn!",
-      html: false,
-      preConfirm: (e) =>
-        new Promise((e) => {
-          setTimeout(() => {
-            e();
-          }, 50);
-        }),
-    }).then((t) => {
-      if (t.value == true) {
-        $.ajax({
-          type: "post",
-          url: "./major/delete",
-          data: {
-            manganh: trid,
-          },
-          success: function (response) {
-            if (response) {
-              e.fire("Deleted!", "Xóa ngành thành công!", "success");
-              mainPagePagination.getPagination(
-                mainPagePagination.option,
-                mainPagePagination.valuePage.curPage
-              );
-            } else {
-              e.fire("Lỗi !", "Xoá ngành không thành công !)", "error");
-            }
-          },
-        });
-      }
-    });
+    swal
+      .fire({
+        title: "Bạn chắc chứ?",
+        text: "Bạn có chắc chắn muốn xoá ngành?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Vâng, tôi chắc chắn!",
+      })
+      .then((result) => {
+        if (result.value === true) {
+          $.ajax({
+            type: "post",
+            url: "./major/delete",
+            data: { manganh },
+            dataType: "json",
+            success: function (response) {
+              if (response.status) {
+                swal.fire(
+                  "Đã xoá!",
+                  response.message || "Xoá ngành thành công!",
+                  "success"
+                );
+                mainPagePagination.getPagination(
+                  mainPagePagination.option,
+                  mainPagePagination.valuePage.curPage
+                );
+              } else {
+                swal.fire(
+                  "Lỗi!",
+                  response.message || "Xoá ngành không thành công!",
+                  "error"
+                );
+              }
+            },
+            error: function () {
+              swal.fire("Lỗi!", "Không thể kết nối đến server!", "error");
+            },
+          });
+        }
+      });
   });
+  
+  
 });
 
 // Pagination

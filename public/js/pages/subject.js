@@ -60,11 +60,11 @@ $.get(
   "./faculty/getAll",
   function (data) {
     let html = "<option></option>";
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
     });
     $("#main-page-khoa").html(html);
-    data.forEach((item) => {
+    data.data.forEach((item) => {
       facultyMap[item.makhoa] = item.tenkhoa;
     });
     //  showData(subjects);
@@ -133,7 +133,7 @@ function loadFaculties() {
       "./faculty/getAll",
       function (data) {
         let html = "<option></option>";
-        data.forEach((item) => {
+        data.data.forEach((item) => {
           html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
           facultyMap[item.makhoa] = item.tenkhoa; // lưu map để showData
         });
@@ -247,7 +247,7 @@ $(document).ready(async function () {
             "./faculty/getAll",
             function (data) {
               let html = "<option></option>";
-              data.forEach((item) => {
+              data.data.forEach((item) => {
                 html += `<option value="${item.makhoa}">${item.tenkhoa}</option>`;
               });
               $("#tenkhoa")

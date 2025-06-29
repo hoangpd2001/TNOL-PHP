@@ -199,7 +199,7 @@ class KetQuaModel extends DB
             WHERE CTN.manhom IN ($inManhom)
 
         ";
-        } else {
+        } else if ($loaigiao == 1) {
             // Giao theo học phần
             $sql = "
             SELECT 
@@ -217,6 +217,42 @@ class KetQuaModel extends DB
             WHERE HP.mahocphan IN ($inManhom)
 
         ";
+        } else if ($loaigiao == -1) {
+            // Gộp cả nhóm và học phần
+            $sql = "
+                SELECT 
+                    CTN.manguoidung, 
+                    KQ.manguoidung AS mandkq, 
+                    KQ.makq, 
+                    KQ.made, 
+                    KQ.diemthi
+                FROM chitietnhom CTN
+                JOIN giaodethi GD ON CTN.manhom = GD.manhom AND GD.made = $made
+                LEFT JOIN ketqua KQ 
+                    ON KQ.manguoidung = CTN.manguoidung 
+                    AND KQ.made = $made 
+                    AND KQ.manguongiao = CTN.manhom  
+                WHERE 1=1
+        
+                UNION ALL
+        
+                SELECT 
+                    ND.id AS manguoidung,
+                    KQ.manguoidung AS mandkq,
+                    KQ.makq,
+                    KQ.made,
+                    KQ.diemthi
+                FROM hocphan HP
+                JOIN giaodethilop GD ON GD.mahocphan = HP.mahocphan AND GD.madethi = $made
+                JOIN lop L ON HP.malop = L.malop
+                JOIN sinhvien SV ON SV.malop = L.malop
+                JOIN nguoidung ND ON ND.id = SV.id
+                LEFT JOIN ketqua KQ 
+                    ON KQ.manguoidung = ND.id 
+                    AND KQ.made = $made 
+                    AND KQ.manguongiao = HP.mahocphan
+                WHERE 1=1
+            ";
         }
 
         $result = mysqli_query($this->con, $sql);
@@ -289,7 +325,7 @@ class KetQuaModel extends DB
             AND KQ.manguongiao = CTN.manhom
         ) $in
         ";
-        } else {
+        } else if ($loaigiao == 1){
             return "
           SELECT 
                 NULL AS makq, $made AS made, ND.id AS manguoidung,
@@ -312,6 +348,51 @@ class KetQuaModel extends DB
             )
             $in
         ";
+        } else if ($loaigiao == -1) {
+            return "
+                SELECT 
+                    NULL AS makq, $made AS made, ND.id AS manguoidung,
+                    NULL AS diemthi, NULL AS thoigianvaothi, NULL AS thoigianlambai,
+                    NULL AS socaudung, NULL AS solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    0 AS loaigiao,
+                    CTN.manhom AS manguongiao,
+                    N.tennhom AS tennguongiao
+                FROM chitietnhom CTN
+                JOIN nguoidung ND ON CTN.manguoidung = ND.id
+                JOIN nhom N ON CTN.manhom = N.manhom
+                WHERE 1=1
+                AND NOT EXISTS (
+                    SELECT 1 FROM ketqua KQ 
+                    WHERE KQ.made = $made 
+                    AND KQ.manguoidung = ND.id 
+                    
+                )
+                $in
+        
+                UNION ALL
+        
+                SELECT 
+                    NULL AS makq, $made AS made, ND.id AS manguoidung,
+                    NULL AS diemthi, NULL AS thoigianvaothi, NULL AS thoigianlambai,
+                    NULL AS socaudung, NULL AS solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    1 AS loaigiao,
+                    HP.mahocphan AS manguongiao,
+                    L.tenLop AS tennguongiao
+                FROM hocphan HP
+                JOIN lop L ON L.malop = HP.malop
+                JOIN sinhvien SV ON SV.malop = L.malop
+                JOIN nguoidung ND ON ND.id = SV.id
+                WHERE 1=1
+                AND NOT EXISTS (
+                    SELECT 1 FROM ketqua KQ 
+                    WHERE KQ.made = $made 
+                    AND KQ.manguoidung = ND.id 
+                
+                )
+                $in
+            ";
         }
     }
 
@@ -338,7 +419,7 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
                 JOIN nhom N ON CTN.manhom = N.manhom
                 WHERE KQ.made = $made AND N.manhom IN ($inNguonGiao)
             ";
-        } else {
+        } else if ($loaigiao == 1){
             $present_query = "
                 SELECT 
                 KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
@@ -353,6 +434,37 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
             JOIN lop L ON SV.malop = L.malop
             JOIN hocphan HP ON HP.malop = L.malop AND KQ.manguongiao = HP.mahocphan
             WHERE KQ.made = $made AND HP.mahocphan IN ($inNguonGiao)
+            ";
+        } else if ($loaigiao == -1) {
+            $present_query = "
+                SELECT 
+                    KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
+                    KQ.socaudung, KQ.solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    0 AS loaigiao,
+                    CTN.manhom AS manguongiao,
+                    N.tennhom AS tennguongiao
+                FROM ketqua KQ
+                JOIN nguoidung ND ON KQ.manguoidung = ND.id
+                JOIN chitietnhom CTN ON CTN.manguoidung = ND.id AND CTN.manhom = KQ.manguongiao
+                JOIN nhom N ON CTN.manhom = N.manhom
+                WHERE KQ.made = $made  
+        
+                UNION ALL
+        
+                SELECT 
+                    KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
+                    KQ.socaudung, KQ.solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    1 AS loaigiao,
+                    HP.mahocphan AS manguongiao,
+                    L.tenLop AS tennguongiao
+                FROM ketqua KQ
+                JOIN nguoidung ND ON KQ.manguoidung = ND.id
+                JOIN sinhvien SV ON SV.id = ND.id
+                JOIN lop L ON SV.malop = L.malop
+                JOIN hocphan HP ON HP.malop = L.malop AND KQ.manguongiao = HP.mahocphan
+                WHERE KQ.made = $made 
             ";
         }
 
@@ -406,7 +518,7 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
         $made = (int)$args['made'];
         $loaigiao = (int)$args['loaigiao'];
        $manhomList = is_array($args['manhom']) ? $args['manhom'] : [$args['manhom']];
-$inNguonGiao = implode(',', array_map('intval', $manhomList));
+        $inNguonGiao = implode(',', array_map('intval', $manhomList));
 
         $whereMore = isset($args['custom']['_where']) ? " AND " . $args['custom']['_where'] : "";
 
@@ -425,7 +537,7 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
                 JOIN nhom N ON CTN.manhom = N.manhom
                 WHERE KQ.made = $made AND N.manhom IN ($inNguonGiao) $whereMore
             ";
-        } else {
+        } else if ($loaigiao == 1){
             $query = "
                 SELECT 
                     KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
@@ -440,6 +552,37 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
                 JOIN lop L ON SV.malop = L.malop
                 JOIN hocphan HP ON HP.malop = L.malop AND KQ.manguongiao = HP.mahocphan
                 WHERE KQ.made = $made AND HP.mahocphan IN ($inNguonGiao) $whereMore
+            ";
+        }else {
+            $query = "
+                SELECT 
+                    KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
+                    KQ.socaudung, KQ.solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    0 AS loaigiao,
+                    N.manhom AS manguongiao,
+                    N.tennhom AS tennguongiao
+                FROM ketqua KQ
+                JOIN nguoidung ND ON KQ.manguoidung = ND.id
+                JOIN chitietnhom CTN ON CTN.manguoidung = ND.id AND CTN.manhom = KQ.manguongiao
+                JOIN nhom N ON CTN.manhom = N.manhom
+                WHERE KQ.made = $made   $whereMore
+        
+                UNION ALL
+        
+                SELECT 
+                    KQ.makq, KQ.made, KQ.manguoidung, KQ.diemthi, KQ.thoigianvaothi, KQ.thoigianlambai,
+                    KQ.socaudung, KQ.solanchuyentab,
+                    ND.email, ND.hoten, ND.avatar,
+                    1 AS loaigiao,
+                    HP.mahocphan AS manguongiao,
+                    L.tenLop AS tennguongiao
+                FROM ketqua KQ
+                JOIN nguoidung ND ON KQ.manguoidung = ND.id
+                JOIN sinhvien SV ON SV.id = ND.id
+                JOIN lop L ON SV.malop = L.malop
+                JOIN hocphan HP ON HP.malop = L.malop AND KQ.manguongiao = HP.mahocphan
+                WHERE KQ.made = $made   $whereMore
             ";
         }
 
@@ -468,11 +611,78 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
         return $query;
     }
 
-
-    public function getTestScoreGroup($made, $manhom)
+    public function getTestScoreGroup($made, $manhom, $loaigiao)
     {
-        $sql = "SELECT ds.manguoidung,ds.hoten,kqt.diemthi,kqt.thoigianvaothi,kqt.thoigianlambai,kqt.socaudung,kqt.solanchuyentab FROM (SELECT ctn.manguoidung,nd.hoten FROM chitietnhom ctn JOIN nguoidung nd ON ctn.manguoidung=nd.id WHERE ctn.manhom=$manhom) ds LEFT JOIN 
-        (SELECT kq.manguoidung,kq.diemthi,kq.thoigianvaothi,kq.thoigianlambai,kq.socaudung,kq.solanchuyentab FROM ketqua kq JOIN giaodethi gdt ON kq.made=gdt.made WHERE gdt.made=$made AND gdt.manhom=$manhom) kqt ON ds.manguoidung=kqt.manguoidung";
+        // Nếu $manhom là mảng thì ép kiểu thành chuỗi số, ngăn SQL injection
+        if (is_array($manhom)) {
+            $manhom_list = implode(",", array_map('intval', $manhom));
+        } else {
+            $manhom_list = intval($manhom);
+        }
+
+        // Truy vấn chính
+        if ($loaigiao == 0) {
+            // Giao theo nhóm
+            $sql = "SELECT 
+                        ds.manguoidung,
+                        ds.hoten,
+                        kqt.diemthi,
+                        kqt.thoigianvaothi,
+                        kqt.thoigianlambai,
+                        kqt.socaudung,
+                        kqt.solanchuyentab 
+                    FROM 
+                        (SELECT ctn.manguoidung, nd.hoten 
+                         FROM chitietnhom ctn 
+                         JOIN nguoidung nd ON ctn.manguoidung = nd.id 
+                         WHERE ctn.manhom IN ($manhom_list)
+                        ) ds 
+                    LEFT JOIN 
+                        (SELECT 
+                             kq.manguoidung,
+                             kq.diemthi,
+                             kq.thoigianvaothi,
+                             kq.thoigianlambai,
+                             kq.socaudung,
+                             kq.solanchuyentab 
+                         FROM ketqua kq 
+                         JOIN giaodethi gdt ON kq.made = gdt.made 
+                         WHERE gdt.made = $made AND gdt.manhom IN ($manhom_list)
+                         GROUP BY kq.makq
+                        ) kqt 
+                    ON ds.manguoidung = kqt.manguoidung";
+        } else if ($loaigiao == 1) {
+            $sql = "SELECT 
+                    ds.manguoidung,
+                    ds.hoten,
+                    kqt.diemthi,
+                    kqt.thoigianvaothi,
+                    kqt.thoigianlambai,
+                    kqt.socaudung,
+                    kqt.solanchuyentab 
+                FROM (
+                    SELECT sv.id AS manguoidung, nd.hoten
+                    FROM hocphan hp
+                    JOIN lop l ON hp.malop = l.malop
+                    JOIN sinhvien sv ON sv.malop = l.malop
+                    JOIN nguoidung nd ON sv.id = nd.id
+                    WHERE hp.mahocphan IN ($manhom_list)
+                ) ds
+                LEFT JOIN (
+                    SELECT 
+                        kq.manguoidung,
+                        kq.diemthi,
+                        kq.thoigianvaothi,
+                        kq.thoigianlambai,
+                        kq.socaudung,
+                        kq.solanchuyentab 
+                    FROM ketqua kq
+                    WHERE kq.made = $made AND kq.loaigiao = 1 AND kq.manguongiao = $manhom_list
+                ) kqt ON ds.manguoidung = kqt.manguoidung";
+        } else {
+            return []; // Trường hợp không hợp lệ
+        }
+
         $result = mysqli_query($this->con, $sql);
         $rows = array();
         while ($row = mysqli_fetch_assoc($result)) {
@@ -480,6 +690,7 @@ $inNguonGiao = implode(',', array_map('intval', $manhomList));
         }
         return $rows;
     }
+
 
     public function getTestAll($made, $ds)
     {

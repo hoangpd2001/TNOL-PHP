@@ -124,6 +124,24 @@ class Test extends Controller
             $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
         }
     }
+    public function approve()
+    {
+        if (AuthCore::checkPermission("dethi", "create")) {
+            $this->view("main_layout", [
+                "Page" => "test_approve",
+                "Title" => "Duyệt Đề kiểm tra",
+                "Plugin" => [
+                    "notify" => 1,
+                    "sweetalert2" => 1,
+                    "pagination" => [],
+                ],
+                "Script" => "test_approve",
+                "user_id" => $_SESSION['user_id'],
+            ]);
+        } else {
+            $this->view("single_layout", ["Page" => "error/page_403", "Title" => "Lỗi !"]);
+        }
+    }
 
     public function update($made)
     {
@@ -197,9 +215,9 @@ class Test extends Controller
     public function detail($made)
     {
         if (filter_var($made, FILTER_VALIDATE_INT) !== false) {
-        
-            $loaigiao = $_GET["loaigiao"];
-            $manguongiao = $_GET["manguongiao"];
+            $loaigiao = isset($_GET["loaigiao"]) ? $_GET["loaigiao"] : -1;
+            $manguongiao = isset($_GET["manguongiao"]) ? $_GET["manguongiao"] : -1;
+
             $dethi = $this->dethimodel->getInfoTestBasic($made, $loaigiao, $manguongiao);
             $checkadmmin = $this->nguoidung->checkAdmin($_SESSION['user_id']);
             if (isset($dethi)) {
@@ -366,7 +384,15 @@ class Test extends Controller
             echo $result;
         }
     }
-
+    public function updateApproveTest()
+    {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("dethi", "update")) {
+            $made = $_POST['made'];
+           
+            $result = $this->dethimodel->updateApproveTest($made);
+            echo $result;
+        }
+    }
     public function getDetail()
     {
 
@@ -625,11 +651,15 @@ class Test extends Controller
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $made = $_POST['made'];
             $manhom = $_POST['manhom'];
+            $loaigiao = $_POST['loaigiao'];
             $ds = $_POST['ds'];
-            $result = $this->ketquamodel->getTestScoreGroup($made, $manhom);
+         
             if ($manhom == 0) {
-                $result = $this->ketquamodel->getTestAll($made, $ds);
+                $result = $this->ketquamodel->getTestScoreGroup($made, $ds,$loaigiao);
+            }else{
+                $result = $this->ketquamodel->getTestScoreGroup($made, $manhom, $loaigiao);
             }
+            
             //Khởi tạo đối tượng
             $excel = new PHPExcel();
             //Chọn trang cần ghi (là số từ 0->n)

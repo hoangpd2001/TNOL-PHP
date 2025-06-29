@@ -16,7 +16,7 @@ class Module extends Controller
 
     public function default()
     {
-        if (AuthCore::checkPermission("hocphan", "view")) {
+        if (AuthCore::checkPermission("nhom", "view")) {
             $this->view("main_layout", [
                 "Page" => "module",
                 "Title" => "Quản lý nhóm học phần",
@@ -36,7 +36,7 @@ class Module extends Controller
     {
         $chitietnhom = $this->nhomModel->getDetailGroup($manhom);
         $check = $this->nguoiDungModel->checkAdmin($_SESSION['user_id']);
-        if (AuthCore::checkPermission("hocphan", "view") && ($_SESSION['user_id'] == $chitietnhom['giangvien']||$check)) {
+        if (AuthCore::checkPermission("nhom", "view") && ($_SESSION['user_id'] == $chitietnhom['giangvien']||$check)) {
             $this->view("main_layout", [
                 "Page" => "class_detail",
                 "Title" => "Quản lý nhóm",
@@ -69,7 +69,7 @@ class Module extends Controller
 
     public function add()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "create")) {
             $tennhom = $_POST['tennhom'];
             $ghichu = $_POST['ghichu'];
    
@@ -84,7 +84,7 @@ class Module extends Controller
 
     public function delete()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "delete")) {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "delete")) {
             $manhom = $_POST['manhom'];
             $result = $this->nhomModel->delete($manhom);
             echo $result;
@@ -94,7 +94,7 @@ class Module extends Controller
 
     public function update()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "update")) {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "update")) {
             $manhom = $_POST['manhom'];
             $tennhom = $_POST['tennhom'];
             $ghichu = $_POST['ghichu'];
@@ -109,7 +109,7 @@ class Module extends Controller
 
     public function hide()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "create")) {
             $manhom = $_POST['manhom'];
             $giatri = $_POST['giatri'];
             $result = $this->nhomModel->hide($manhom, $giatri);
@@ -120,7 +120,7 @@ class Module extends Controller
 
     public function getDetail()
     {
-        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "create")) {
             $manhom = $_POST['manhom'];
             $result = $this->nhomModel->getById($manhom);
             echo json_encode($result);
@@ -131,7 +131,7 @@ class Module extends Controller
 
     public function updateInvitedCode()
     {
-        if($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
+        if($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "create")) {
             $manhom = $_POST['manhom'];
             $result = $this->nhomModel->updateInvitedCode($manhom);
             echo $result;
@@ -140,7 +140,7 @@ class Module extends Controller
 
     public function getInvitedCode()
     {
-        if($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "view")) {
+        if($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("nhom", "view")) {
             $manhom = $_POST['manhom'];
             $result = $this->nhomModel->getInvitedCode($manhom);
             echo $result['mamoi'];

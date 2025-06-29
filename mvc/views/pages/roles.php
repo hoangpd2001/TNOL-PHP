@@ -67,7 +67,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <tr>
+                            <tr>
                             <tr>
                                 <td>Người dùng</td>
                                 <td class="text-center">
@@ -99,6 +99,21 @@
                                 </td>
                             </tr>
                             <tr>
+                                <td>Nhóm </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="nhom" value="view">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="nhom" value="create">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="nhom" value="update">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="nhom" value="delete">
+                                </td>
+                            </tr>
+                            <tr>
                                 <td>Câu hỏi</td>
                                 <td class="text-center">
                                     <input class="form-check-input" type="checkbox" name="cauhoi" value="view">
@@ -114,7 +129,7 @@
                                 </td>
                             </tr>
                             <tr>
-                                <td>Môn học</td>
+                                <td>Tổ chức</td>
                                 <td class="text-center">
                                     <input class="form-check-input" type="checkbox" name="monhoc" value="view">
                                 </td>
@@ -173,6 +188,21 @@
                                     <input class="form-check-input" type="checkbox" name="dethi" value="delete">
                                 </td>
                             </tr>
+                            <!-- <tr>
+                                <td>Ôn luyện</td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="onluyen" value="view">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="onluyen" value="create">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="onluyen" value="update">
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input" type="checkbox" name="onluyen" value="delete">
+                                </td>
+                            </tr> -->
                             <tr>
                                 <td>Nhóm quyền</td>
                                 <td class="text-center">
