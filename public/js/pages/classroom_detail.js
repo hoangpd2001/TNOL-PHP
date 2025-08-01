@@ -73,7 +73,7 @@ const showData = function (students) {
                     student.gioitinh == 1 ? "Nam" : "Nữ"
                   }</td>
                   <td class="text-center fs-sm">${student.ngaysinh}</td>
-                  <td class="text-center">
+                  <!--<td class="text-center">
                       <div class="btn-group">
                           <button type="button" class="btn btn-sm btn-alt-secondary kick-user"
                               data-bs-toggle="Delete" title="Delete" data-id="${
@@ -82,7 +82,7 @@ const showData = function (students) {
                               <i class="fa fa-fw fa-times"></i>
                           </button>
                       </div>
-                  </td>
+                  </td> --!>
               </tr>
           `;
 

@@ -277,3 +277,57 @@ td p {
 .truncate--6 {
     -webkit-line-clamp: 6;
 }
+/* custom.css - Ghi đè màu default theme Dashmix */
+/* 
+/* Đổi màu nền toàn trang */
+/* body { */
+    /* background-color: #f8f9fc !important; */
+/* } */
+/* 
+/* Đổi màu chữ của class text-default */
+/* .text-default { */
+    /* color: #b6343b !important; */
+    /* Xanh lá */
+/* } */
+/*
+/* Đổi màu nút mặc định */
+/* .btn-primary { */
+    /* background-color: #b6343b !important; */
+    /* border-color: #b6343b !important; */
+/* } */
+
+/* .btn-primary:hover { */
+    /* background-color: #218838 !important; */
+    /* border-color: #1e7e34 !important; */
+/* } */
+
+/* Đổi màu link của default theme icon */
+/* a[data-theme="default"] i { */
+    /* color: #b6343b !important; */
+/* } */
+/* i[data-theme="default"] i { */
+    /* color: #b6343b !important; */
+/* } */
+/* :root { */
+    /* --bs-blue: #b6343b; */
+    /* Màu xanh lá thay cho #0d6efd */ 
+/* } */
+        /* custom.css */
+   
+        /* .bg-header-dark { */
+            /* background-color: #b6343b !important; */
+        /* } */
+    
+        /* .nav-main-link.active { */
+            /* background-color: #e4aeb1 !important; */
+            /* color: #fff !important; */
+        /* } */
+  
+        /* #sidebar .nav-main-link i, */
+        /* #sidebar .btn i { */
+            /* color: #ad0606 !important; */
+        /* }      */
+                /* .nav-main-link.active .nav-main-link-icon, */
+                /* .nav-main-link.active i { */
+                    /* color: #fff !important; */
+                /* }  */ 

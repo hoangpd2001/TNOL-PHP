@@ -107,11 +107,24 @@ class Classmodule extends Controller
         if ($_SERVER["REQUEST_METHOD"] == "POST" && AuthCore::checkPermission("hocphan", "create")) {
             $mahocphan = $_POST['mahocphan'];
             $giatri = $_POST['giatri'];
+
             $result = $this->hocphanModel->hide($mahocphan, $giatri);
-            echo $result;
-        } else
-            echo json_encode(false);
+
+            if ($result) {
+                http_response_code(200);
+                echo json_encode(["success" => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(["success" => false, "message" => "Cập nhật thất bại"]);
+            }
+        } else {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Không có quyền"]);
+        }
+
+        exit; 
     }
+
 
     public function getDetail()
     {

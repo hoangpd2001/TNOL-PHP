@@ -121,8 +121,8 @@ $(document).ready(function () {
           const btnToggle =
             group.trangthai == 1
               ? `<a class="nav-main-link dropdown-item btn-hide-group" href="javascript:void(0)" data-id="${group.mahocphan}">
-                <i class="nav-main-link-icon si si-eye me-2 text-dark"></i>
-                <span class="nav-main-link-name fw-normal">Ẩn nhóm</span>
+                <i class="nav-main-link-icon si si-eye me-2  text-danger"></i>
+                <span class="nav-main-link-name fw-normal  text-danger">Ẩn nhóm</span>
               </a>`
               : `<a class="nav-main-link dropdown-item btn-unhide-group" href="javascript:void(0)" data-id="${group.mahocphan}">
                 <i class="nav-main-link-icon si si-action-undo me-2 text-dark"></i>
@@ -142,7 +142,7 @@ $(document).ready(function () {
                     <div class="dropdown-menu fs-sm">
                      <a class="nav-main-link dropdown-item manhom" href="classmodule/detail/${group.mahocphan}">
                                         <i class="nav-main-link-icon si si-info me-2 text-dark"></i>
-                                        <span class="nav-main-link-name fw-normal">Danh sách sinh viên</span>
+                                        <span class="nav-main-link-name fw-normal">Thông tin chi tiết </span>
                                     </a>
                       <a class="nav-main-link dropdown-item manhom classroom-info"  data-id="${group.malop}"  data-bs-toggle="modal" data-bs-target="#modal-student">
                         <i class="nav-main-link-icon si si-info me-2 text-dark"></i>
@@ -153,10 +153,7 @@ $(document).ready(function () {
                         <span class="nav-main-link-name fw-normal">Sửa thông tin</span>
                       </a>
                       ${btnToggle}
-                      <a class="nav-main-link dropdown-item btn-delete-group" href="javascript:void(0)" data-id="${group.mahocphan}" data-role="hocphan" data-action="delete">
-                        <i class="nav-main-link-icon si si-trash me-2 text-danger"></i>
-                        <span class="nav-main-link-name fw-normal text-danger">Xoá nhóm</span>
-                      </a>
+                 
                     </div>
                   </div>
                 </div>
@@ -173,7 +170,10 @@ $(document).ready(function () {
         html += `</div></div>`;
       });
     }
-
+    // <a class="nav-main-link dropdown-item btn-delete-group" href="javascript:void(0)" data-id="${group.mahocphan}" data-role="hocphan" data-action="delete">
+    //   <i class="nav-main-link-icon si si-trash me-2 text-danger"></i>
+    //   <span class="nav-main-link-name fw-normal text-danger">Xoá nhóm</span>
+    // </a>
     $("#class-group").html(html);
     $('[data-bs-toggle="tooltip"]').tooltip();
   }
@@ -326,8 +326,8 @@ $(document).ready(function () {
       })
       .then((result) => {
         if (result.isConfirmed) {
-          groups[index].nhom.forEach((item) => {
-            updateHide(item.manhom, 0);
+          groups[index].lop.forEach((item) => {
+            updateHide(item.mahocphan, 0);
           });
           groups.splice(index, 1);
           Dashmix.helpers("jq-notify", {
@@ -353,8 +353,8 @@ $(document).ready(function () {
       })
       .then((result) => {
         if (result.isConfirmed) {
-          groups[index].nhom.forEach((item) => {
-            updateHide(item.manhom, 1);
+          groups[index].lop.forEach((item) => {
+            updateHide(item.mahocphan, 1);
           });
           groups.splice(index, 1);
           Dashmix.helpers("jq-notify", {
@@ -423,10 +423,10 @@ $(document).ready(function () {
 
   function removeItem(manhom) {
     for (let i = 0; i < groups.length; i++) {
-      let index = groups[i].nhom.findIndex((item) => item.manhom == manhom);
+      let index = groups[i].lop.findIndex((item) => item.mahocphan == manhom);
       if (index != -1) {
-        groups[i].nhom.splice(index, 1);
-        if (groups[i].nhom.length == 0) groups.splice(i, 1);
+        groups[i].lop.splice(index, 1);
+        if (groups[i].lop.length == 0) groups.splice(i, 1);
         break;
       }
     }
@@ -457,9 +457,9 @@ $(document).ready(function () {
     return new Promise((resolve, reject) => {
       $.ajax({
         type: "post",
-        url: "./module/hide",
+        url: "./classmodule/hide",
         data: {
-          manhom: manhom,
+          mahocphan: manhom,
           giatri: giatri,
         },
         success: function (response) {

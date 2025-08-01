@@ -40,14 +40,13 @@ class HocPhanModel extends DB
     // Ẩn || Hiện nhóm
     public function hide($mahocphan, $giatri)
     {
-        $valid = true;
-        $sql = "UPDATE `hocphan` SET `trangthai`=' $giatri' WHERE `mahocphan`='$mahocphan'";
-        $result = mysqli_query($this->con, $sql);
-        if (!$result) {
-            $valid = false;
-        }
-        return $valid;
+        $mahocphan = intval($mahocphan);
+        $giatri = intval($giatri);
+
+        $sql = "UPDATE hocphan SET trangthai = $giatri WHERE mahocphan = $mahocphan";
+        return mysqli_query($this->con, $sql);
     }
+
 
 
     public function getById($mahocphan)
@@ -79,7 +78,9 @@ class HocPhanModel extends DB
         
         $filter = "";
         if ($trangthai) {
-            $filter .= " AND hp.trangthai = '$trangthai'";
+            $filter .= " AND hp.trangthai = $trangthai ";
+        }else{
+            $filter .= " AND hp.trangthai = $trangthai ";
         }
         if (!class_exists('NguoiDungModel')) {
             require_once './mvc/models/NguoiDungModel.php';
@@ -105,7 +106,7 @@ class HocPhanModel extends DB
             JOIN khoahoc kh ON l.makhoahoc = kh.makhoahoc
             JOIN nguoidung gv ON hp.magiaovien = gv.id
             LEFT JOIN sinhvien sv ON sv.malop = l.malop
-            WHERE hp.trangthai = 1 ".  $filter."
+            WHERE 1=1 ".  $filter."
             GROUP BY 
                 hp.mahocphan, 
                 mh.mamonhoc, mh.tenmonhoc,
